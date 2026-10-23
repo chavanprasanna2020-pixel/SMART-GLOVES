@@ -433,7 +433,7 @@ function simValues(){
 async function fetchLive(){
   const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 1500);
   try {
-    const r = await fetch('/status', { signal: ctrl.signal, cache: 'no-store' });
+   const r = await fetch('http://192.168.9.73/status', { signal: ctrl.signal, cache: 'no-store' });
     const j = await r.json();
     const v = [j.f1, j.f2, j.f3].map(Number);
     return v.some(isNaN) ? null : v;
