@@ -195,6 +195,7 @@ dialog h2{font-size:18px;margin-bottom:14px}
         <div class="live-only">
           <p class="hint" style="margin-top:10px">ESP32: <b id="espShow"></b><br>
           Phone/laptop and ESP32 must be on the same Wi-Fi / hotspot. IP change karaycha asel tar ⚙️ Settings madhe kar.</p>
+          <p class="hint" id="dbg" style="margin-top:8px;font-family:monospace;color:#fcd34d"></p>
         </div>
         <div class="demo-only">
           <h2 style="margin:12px 0 0">Simulate fingers</h2>
@@ -505,14 +506,17 @@ function simValues(){
     return simCur[i] + (Math.random() - .5) * 40;
   });
 }
+let lastErr = '', lastRaw = null;
 async function fetchLive(){
-  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 1500);
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 2500);
   try {
     const r = await fetch(espUrl(), { signal: ctrl.signal, cache: 'no-store' });
     const j = await r.json();
     const v = [j.f1, j.f2, j.f3].map(Number);
-    return v.some(isNaN) ? null : v;
-  } catch(e){ return null; } finally { clearTimeout(t); }
+    if (v.some(isNaN)){ lastErr = 'Data format chukicha (f1,f2,f3 pahije)'; return null; }
+    lastErr = ''; lastRaw = v; return v;
+  } catch(e){ lastErr = e && e.name === 'AbortError' ? 'Timeout: ESP32 uttar det nahi' : 'Request block / ESP32 reachable nahi'; return null; }
+  finally { clearTimeout(t); }
 }
 let connState = '';
 function setConn(st){
@@ -573,17 +577,25 @@ function handle(vals, now){
   } else $('#holdBar').style.width = '0';
 }
 
+let fails = 0;
+function paintDbg(){
+  const d = $('#dbg'); if (!d) return;
+  d.textContent = lastRaw ? `Last data: f1=${lastRaw[0]}  f2=${lastRaw[1]}  f3=${lastRaw[2]}` + (lastErr ? `  |  ⚠ ${lastErr}` : '')
+                          : (lastErr ? '⚠ ' + lastErr : 'Data yenyachi vaat pahat aahe…');
+}
 async function tick(){
   if (busy) return; busy = true;
   try {
     let vals;
     if (S.mode === 'demo'){ vals = simValues(); setConn('demo'); }
-    else { vals = await fetchLive(); if (!vals){ setConn('off'); return; } setConn('live'); }
+    else {
+      vals = await fetchLive(); paintDbg();
+      if (!vals){ fails++; if (fails >= 5) setConn('off'); return; }
+      fails = 0; setConn('live');
+    }
     handle(vals, Date.now());
   } finally { busy = false; }
 }
-
-document.addEventListener('pointerdown', () => autoSound(), { once:true });
 
 /* demo input */
 function paintSim(){ simF.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', simBent[i])); }
@@ -654,7 +666,7 @@ renderVideo();
 applyMode(); paintLang(); renderLegend(); renderHistory(); placeTicks(); paintSim(); paintSound(); showCat('normal');
 if (S.mode === 'live') setConn('off');
 loadVoices(); if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = loadVoices;
-setInterval(tick, 200);
+setInterval(tick, 300);
 setInterval(tickEmergency, 1000);
 })();
 </script>
