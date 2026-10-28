@@ -1,1433 +1,229 @@
 <!DOCTYPE html>
-
-<html lang="en">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-
-<meta name="theme-color" content="#070d1a">
-
-<title>Smart Glove Care Pro</title>
-
-<style>
-
-  :root{--bg:#070d1a;--surface:rgba(255,255,255,.045);--surface2:rgba(255,255,255,.08);--line:rgba(255,255,255,.09);--text:#eef3fb;--sub:#8fa0b8;--accent:#38e1c6;--ok:#34d399;--warn:#fbbf24;--bad:#f43f5e;--c:#34d399;--radius:20px}
-
-  *{box-sizing:border-box;margin:0;padding:0}
-
-  html{-webkit-text-size-adjust:100%}
-
-  body{font-family:ui-rounded,"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:max(14px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom));overflow-x:hidden}
-
-  .bg{position:fixed;inset:0;z-index:-2;background:radial-gradient(60% 50% at 12% 0%,rgba(56,225,198,.16),transparent 70%),radial-gradient(50% 45% at 100% 20%,rgba(96,165,250,.14),transparent 70%),radial-gradient(60% 50% at 50% 110%,rgba(167,139,250,.12),transparent 70%),var(--bg)}
-
-  .alarm-overlay{position:fixed;inset:0;z-index:50;pointer-events:none;opacity:0;transition:opacity .3s}
-
-  body.alarm .alarm-overlay{opacity:1;animation:flash .8s infinite alternate;box-shadow:inset 0 0 0 6px var(--bad),inset 0 0 120px rgba(244,63,94,.55)}
-
-  @keyframes flash{from{background:rgba(244,63,94,.05)}to{background:rgba(244,63,94,.22)}}
-
-  .app{max-width:1020px;margin:0 auto;display:grid;gap:16px;grid-template-columns:1fr}
-
-  @media(min-width:880px){.app{grid-template-columns:1.1fr .9fr;align-items:start}header,.top-bars{grid-column:1/-1}}
-
-  .col{display:grid;gap:16px}
-
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-
-  .brand{display:flex;align-items:center;gap:12px}
-
-  .logo{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.5rem;background:linear-gradient(135deg,rgba(56,225,198,.3),rgba(96,165,250,.3));border:1px solid var(--line)}
-
-  .brand h1{font-size:1.2rem;font-weight:800;letter-spacing:-.01em}
-
-  .brand p{font-size:.78rem;color:var(--sub)}
-
-  .hdr-r{display:flex;align-items:center;gap:8px}
-
-  .pill{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:99px;font-size:.78rem;font-weight:700;background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.25)}
-
-  .pill i{width:8px;height:8px;border-radius:50%;background:currentColor;animation:blink 1.6s infinite}
-
-  .pill.live{background:rgba(52,211,153,.12);color:var(--ok);border-color:rgba(52,211,153,.3)}
-
-  .pill.off{background:rgba(244,63,94,.12);color:var(--bad);border-color:rgba(244,63,94,.3)}
-
-  @keyframes blink{50%{opacity:.25}}
-
-  .icon-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:1.1rem;cursor:pointer}
-
-  .icon-btn:hover{background:var(--surface2)}
-
-  .sound{width:100%;padding:13px;border-radius:14px;border:1px solid var(--line);font-weight:700;font-size:.9rem;cursor:pointer;color:#fff;background:linear-gradient(90deg,#2563eb,#7c3aed);transition:.2s}
-
-  .sound.on{background:var(--surface);color:var(--ok);border-color:rgba(52,211,153,.4)}
-
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;backdrop-filter:blur(10px)}
-
-  .card h2{font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--sub);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-
-  .row-btns{display:flex;gap:6px;flex-wrap:wrap}
-
-  .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:.8rem;font-weight:700;cursor:pointer;transition:.15s;text-transform:none;letter-spacing:0}
-
-  .btn:hover{background:var(--surface2);border-color:rgba(255,255,255,.2)}
-
-  .btn.danger{color:#fda4af}
-
-  .status{--c:#34d399;text-align:center;padding:30px 20px 22px;position:relative;overflow:hidden;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--c) 26%,transparent),transparent 72%),var(--surface);border-color:color-mix(in srgb,var(--c) 55%,transparent);transition:border-color .4s,background .4s}
-
-  .status .ico{width:104px;height:104px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font-size:3.4rem;position:relative;background:color-mix(in srgb,var(--c) 18%,transparent);border:1px solid color-mix(in srgb,var(--c) 50%,transparent)}
-
-  .status .ico::after{content:"";position:absolute;inset:-10px;border-radius:50%;border:2px solid var(--c);opacity:0;animation:ring 2.2s infinite}
-
-  body:not(.idle) .status .ico::after{opacity:.5}
-
-  @keyframes ring{0%{transform:scale(.85);opacity:.6}100%{transform:scale(1.25);opacity:0}}
-
-  .status h3{font-size:1.65rem;font-weight:800;line-height:1.2;margin-bottom:6px;letter-spacing:-.01em}
-
-  .status p{font-size:.9rem;color:var(--sub)}
-
-  .hold{height:5px;border-radius:5px;background:rgba(255,255,255,.07);margin:18px auto 0;max-width:260px;overflow:hidden}
-
-  .hold div{height:100%;width:0;background:var(--c);transition:width .12s linear}
-
-  .ack{display:none;margin:16px auto 0;padding:13px 26px;border:none;border-radius:14px;background:#fff;color:#7f1d1d;font-size:1rem;font-weight:800;cursor:pointer}
-
-  .status.is-emergency{animation:shake 1s infinite}
-
-  .status.is-emergency .ack{display:inline-block}
-
-  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
-
-  .fingers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-
-  .finger{text-align:center;padding:12px 6px;border-radius:16px;background:rgba(0,0,0,.2);border:1px solid var(--line);transition:.2s}
-
-  .finger.bent{border-color:var(--warn);background:rgba(251,191,36,.08)}
-
-  .cap{position:relative;width:46px;height:130px;margin:0 auto 10px;border-radius:24px;background:rgba(255,255,255,.06);overflow:hidden;border:1px solid var(--line)}
-
-  .fill{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(0deg,#38e1c6,#60a5fa);transition:height .2s,background .2s}
-
-  .finger.bent .fill{background:linear-gradient(0deg,#fbbf24,#fb923c)}
-
-  .tick{position:absolute;left:0;right:0;height:2px;background:#fff;opacity:.75}
-
-  .fname{font-weight:800;font-size:.86rem}
-
-  .fpin{font-size:.7rem;color:var(--sub)}
-
-  .fval{margin-top:4px;font-size:.9rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent)}
-
-  .finger.bent .fval{color:var(--warn)}
-
-  .hint{font-size:.74rem;color:var(--sub);margin-top:12px;line-height:1.5}
-
-  .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line);margin-bottom:12px}
-
-  .seg button{padding:9px;border:none;border-radius:9px;background:transparent;color:var(--sub);font-weight:700;font-size:.85rem;cursor:pointer}
-
-  .seg button.on{background:var(--surface2);color:var(--text)}
-
-  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
-
-  .field label{font-size:.78rem;color:var(--sub);font-weight:600}
-
-  select{width:100%;padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);font-size:.92rem}
-
-  input[type=range]{width:100%;accent-color:var(--accent)}
-
-  .live-only{display:none}
-
-  body.live .live-only{display:block}
-
-  body.live .demo-only{display:none}
-
-  .sim-f{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-
-  .sim-f button{padding:14px 6px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-weight:800;font-size:.9rem;cursor:pointer;transition:.15s}
-
-  .sim-f button.on{background:rgba(251,191,36,.15);border-color:var(--warn);color:var(--warn)}
-
-  .presets{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-
-  .presets button{padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--text);font-weight:700;font-size:.82rem;cursor:pointer;text-align:left}
-
-  .presets button:hover{border-color:var(--accent)}
-
-  .legend{display:grid;gap:8px}
-
-  .lg{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:13px;background:rgba(0,0,0,.2);border-left:4px solid var(--c)}
-
-  .lg .e{font-size:1.3rem}
-
-  .lg .t{flex:1;font-weight:700;font-size:.9rem}
-
-  .dots{display:flex;gap:5px}
-
-  .dots i{width:11px;height:11px;border-radius:50%;border:2px solid var(--sub)}
-
-  .dots i.f{background:var(--c);border-color:var(--c)}
-
-  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-
-  .chip{padding:5px 10px;border-radius:99px;font-size:.78rem;font-weight:700;background:rgba(0,0,0,.25);border:1px solid var(--line)}
-
-  .hist{list-style:none;max-height:300px;overflow-y:auto;display:grid;gap:8px;padding-right:2px}
-
-  .hi{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.22);border-left:4px solid var(--c);font-size:.88rem}
-
-  .hi .m{flex:1;font-weight:700}
-
-  .hi small{display:block;color:var(--sub);font-weight:500;font-size:.72rem;margin-top:2px}
-
-  .hi time{font-size:.74rem;color:var(--sub);white-space:nowrap}
-
-  .empty{text-align:center;color:var(--sub);font-size:.85rem;padding:18px}
-
-  dialog{margin:auto;border:1px solid var(--line);border-radius:20px;background:#0e1626;color:var(--text);padding:22px;width:min(420px,92vw)}
-
-  dialog::backdrop{background:rgba(0,0,0,.6);backdrop-filter:blur(3px)}
-
-  dialog h2{font-size:1.1rem;margin-bottom:16px}
-
-  .sw{display:flex;align-items:center;justify-content:space-between;padding:9px 0;font-size:.9rem;font-weight:600}
-
-  .sw input{width:20px;height:20px;accent-color:var(--accent)}
-
-  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,30px);opacity:0;background:#fff;color:#0b1220;padding:11px 18px;border-radius:12px;font-weight:700;font-size:.86rem;z-index:99;transition:.3s;pointer-events:none;max-width:90vw;text-align:center}
-
-  .toast.show{opacity:1;transform:translate(-50%,0)}
-
-</style>
-
-</head>
-
-<body class="idle">
-
-<div class="bg"></div>
-
-<div class="alarm-overlay"></div>
-
-
-
-<main class="app">
-
-  <header>
-
-    <div class="brand">
-
-      <div class="logo">🧤</div>
-
-      <div><h1>Smart Glove Care</h1><p>Patient assistive alert system · offline</p></div>
-
-    </div>
-
-    <div class="hdr-r">
-
-      <div class="pill" id="pill"><i></i><span id="pillTxt">Demo mode</span></div>
-
-      <button class="icon-btn" id="openSettings" title="Settings">⚙️</button>
-
-    </div>
-
-  </header>
-
-
-
-  <div class="top-bars">
-
-    <button class="sound" id="soundBtn">🔇 Tap to enable Voice &amp; Siren</button>
-
-  </div>
-
-
-
-  <div class="col">
-
-    <section class="card status" id="status">
-
-      <div class="ico" id="stIcon">😊</div>
-
-      <h3 id="stTitle">Patient is comfortable.</h3>
-
-      <p id="stSub">All fingers straight. Monitoring…</p>
-
-      <div class="hold"><div id="holdBar"></div></div>
-
-      <button class="ack" id="ackBtn">✅ I'm coming — Acknowledge</button>
-
-    </section>
-
-
-
-    <section class="card">
-
-      <h2>
-
-        <span>Live flex sensors</span>
-
-        <span class="row-btns live-only">
-
-          <button class="btn" id="calS">Calibrate straight</button>
-
-          <button class="btn" id="calB">Calibrate bent</button>
-
-        </span>
-
-      </h2>
-
-      <div class="fingers" id="fingers"></div>
-
-      <p class="hint">White line = trigger point. A gesture fires only after it is held steady, so accidental twitches are ignored.</p>
-
-    </section>
-
-
-
-    <section class="card">
-
-      <h2>Connection</h2>
-
-      <div class="seg" id="modeSeg">
-
-        <button data-mode="demo">🎮 Demo</button>
-
-        <button data-mode="live">📡 Live ESP32</button>
-
-      </div>
-
-      <div class="live-only">
-
-        <p class="hint" style="margin-top:0">Works without internet. Connect every phone to the <b>Smart_Glove_WiFi</b> network and open <b>http://192.168.4.1</b>. All connected phones show the alerts.</p>
-
-      </div>
-
-      <div class="demo-only">
-
-        <h2 style="margin-top:4px">Simulate fingers</h2>
-
-        <div class="sim-f" id="simF"></div>
-
-        <div class="presets" id="presets"></div>
-
-        <p class="hint">Keyboard: press <b>1</b> <b>2</b> <b>3</b> to bend fingers, <b>0</b> to straighten all.</p>
-
-      </div>
-
-    </section>
-
-  </div>
-
-
-
-  <div class="col">
-
-    <section class="card">
-
-      <h2>Gesture guide (7 Combinations)</h2>
-
-      <div class="legend" id="legend"></div>
-
-    </section>
-
-
-
-    <section class="card">
-
-      <h2>
-
-        <span>Alert history</span>
-
-        <span class="row-btns">
-
-          <button class="btn" id="exportBtn">Export CSV</button>
-
-          <button class="btn danger" id="clearBtn">Clear</button>
-
-        </span>
-
-      </h2>
-
-      <div class="chips" id="stats"></div>
-
-      <ul class="hist" id="hist"></ul>
-
-    </section>
-
-  </div>
-
-</main>
-
-
-
-<dialog id="settings">
-
-  <h2>⚙️ Settings</h2>
-
-  <div class="field">
-
-    <label for="lang">Alert language (text + voice)</label>
-
-    <select id="lang">
-
-      <option value="en">English</option>
-
-      <option value="mr">मराठी</option>
-
-      <option value="hi">हिन्दी</option>
-
-    </select>
-
-  </div>
-
-  <div class="field">
-
-    <label for="thr">Bend sensitivity: <b id="thrV"></b>% (lower = bends easier)</label>
-
-    <input type="range" id="thr" min="20" max="80" step="5">
-
-  </div>
-
-  <div class="field">
-
-    <label for="hold">Hold time before alert: <b id="holdV"></b> ms</label>
-
-    <input type="range" id="hold" min="300" max="1500" step="100">
-
-  </div>
-
-  <label class="sw">Voice announcements <input type="checkbox" id="voice"></label>
-
-  <label class="sw">Emergency siren <input type="checkbox" id="siren"></label>
-
-  <label class="sw">Vibration (mobile) <input type="checkbox" id="vibrate"></label>
-
-  <div class="row-btns" style="margin-top:16px;justify-content:flex-end">
-
-    <button class="btn" id="resetCal">Reset calibration</button>
-
-    <button class="btn" id="closeSettings">Done</button>
-
-  </div>
-
-</dialog>
-
-
-
-<div class="toast" id="toast"></div>
-
-
-
-<script>
-
-(() => {
-
-'use strict';
-
-const $ = s => document.querySelector(s);
-
-
-
-const store = {
-
-  get(k, d){ try { const v = localStorage.getItem('sg_' + k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
-
-  set(k, v){ try { localStorage.setItem('sg_' + k, JSON.stringify(v)); } catch(e){} }
-
-};
-
-
-
-const F = [
-
-  { n:'Finger 1', pin:'GPIO 34' },
-
-  { n:'Finger 2', pin:'GPIO 35' },
-
-  { n:'Finger 3', pin:'GPIO 32' }
-
-];
-
-
-
-const CATS = {
-
-  normal:   { icon:'😊', color:'#34d399', name:'All good', pattern:0,
-
-              msg:{ en:'Patient is comfortable.', mr:'रुग्ण आरामात आहे.', hi:'मरीज़ आराम से है।' } },
-
-  water:    { icon:'💧', color:'#38bdf8', name:'Water', pattern:1,
-
-              msg:{ en:'I need water.', mr:'मला पाणी पाहिजे.', hi:'मुझे पानी चाहिए।' } },
-
-  medicine: { icon:'💊', color:'#a78bfa', name:'Medicine', pattern:2,
-
-              msg:{ en:'I need my medicine.', mr:'मला औषध पाहिजे.', hi:'मुझे दवा चाहिए।' } },
-
-  food:     { icon:'🍲', color:'#4ade80', name:'Food', pattern:4,
-
-              msg:{ en:'I am hungry.', mr:'मला भूक लागली आहे.', hi:'मुझे भूख लगी है।' } },
-
-  help:     { icon:'🤝', color:'#fbbf24', name:'Help', pattern:3,
-
-              msg:{ en:'I need help.', mr:'मला मदत पाहिजे.', hi:'मुझे मदद चाहिए।' } },
-
-  washroom: { icon:'🚻', color:'#2dd4bf', name:'Washroom', pattern:5,
-
-              msg:{ en:'I need the washroom.', mr:'मला स्वच्छतागृहात जायचे आहे.', hi:'मुझे शौचालय जाना है।' } },
-
-  pain:     { icon:'🩹', color:'#fb923c', name:'Pain', pattern:6,
-
-              msg:{ en:'I am in pain.', mr:'मला वेदना होत आहेत.', hi:'मुझे दर्द हो रहा है।' } },
-
-  emergency:{ icon:'🚨', color:'#f43f5e', name:'Emergency', pattern:7,
-
-              msg:{ en:'Emergency! Come immediately!', mr:'आणीबाणी! लगेच या!', hi:'आपातकाल! तुरंत आइए!' } }
-
-};
-
-const BY_MASK = {};
-
-Object.entries(CATS).forEach(([k, c]) => { if (c.pattern) BY_MASK[c.pattern] = k; });
-
-const VOICE_LANG = { en:'en-IN', mr:'mr-IN', hi:'hi-IN' };
-
-
-
-const S = Object.assign({ mode:'live', lang:'en', hold:600, thr:50, voice:true, siren:true, vibrate:true }, store.get('settings', {}));
-
-
-
-let cal = store.get('cal', null);
-
-if (!Array.isArray(cal) || cal.length !== 3) cal = F.map(() => ({ s:800, b:2600 }));
-
-let history = store.get('history', []);
-
-
-
-const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
-
-const saveS = () => store.set('settings', S);
-
-let toastT;
-
-function toast(msg){
-
-  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-
-  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600);
-
-}
-
-function patternText(mask){
-
-  return F.map((f, i) => (mask & (1 << i)) ? f.n : null).filter(Boolean).join(' + ');
-
-}
-
-
-
-const fingersEl = $('#fingers');
-
-F.forEach((f, i) => {
-
-  fingersEl.insertAdjacentHTML('beforeend',
-
-    `<div class="finger" id="fg${i}"><div class="cap"><div class="fill"></div><div class="tick"></div></div>
-
-     <div class="fname">${f.n}</div><div class="fpin">${f.pin}</div><div class="fval">–</div></div>`);
-
-});
-
-function placeTicks(){ document.querySelectorAll('.tick').forEach(t => t.style.bottom = S.thr + '%'); }
-
-
-
-const simF = $('#simF');
-
-F.forEach((f, i) => simF.insertAdjacentHTML('beforeend', `<button data-i="${i}">☝️ ${i + 1}</button>`));
-
-const presetsEl = $('#presets');
-
-Object.entries(CATS).forEach(([k, c]) => {
-
-  if (k === 'normal') return;
-
-  presetsEl.insertAdjacentHTML('beforeend', `<button data-p="${c.pattern}">${c.icon} ${c.name}</button>`);
-
-});
-
-presetsEl.insertAdjacentHTML('beforeend', `<button data-p="0" style="grid-column:span 2;text-align:center">✋ Straighten all (reset)</button>`);
-
-
-
-function renderLegend(){
-
-  $('#legend').innerHTML = Object.entries(CATS).filter(([k]) => k !== 'normal').map(([k, c]) => `
-
-    <div class="lg" style="--c:${c.color}"><span class="e">${c.icon}</span>
-
-      <span class="t">${c.name} <small style="color:var(--sub);font-weight:500">(${c.msg[S.lang]})</small></span>
-
-      <span class="dots">${F.map((_, i) => `<i class="${c.pattern & (1 << i) ? 'f' : ''}"></i>`).join('')}</span></div>`).join('');
-
-}
-
-
-
-/* ---------- audio ---------- */
-
-let ctx = null, soundOn = false, soundTouched = false;
-
-function ensureCtx(){
-
-  const A = window.AudioContext || window.webkitAudioContext;
-
-  if (!ctx && A) ctx = new A();
-
-  if (ctx && ctx.state === 'suspended') ctx.resume();
-
-}
-
-function tone(freq, t0, dur, type = 'sine', vol = .2){
-
-  const o = ctx.createOscillator(), g = ctx.createGain();
-
-  o.type = type; o.frequency.value = freq;
-
-  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .02);
-
-  g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
-
-  o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + dur + .05);
-
-}
-
-function chime(){ if (!soundOn || !ctx) return; const t = ctx.currentTime; tone(784, t, .25); tone(1047, t + .18, .4); }
-
-function siren(){
-
-  if (!soundOn || !ctx || !S.siren) return;
-
-  const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
-
-  o.type = 'sawtooth';
-
-  o.frequency.setValueAtTime(600, t);
-
-  o.frequency.linearRampToValueAtTime(1200, t + .4);
-
-  o.frequency.linearRampToValueAtTime(600, t + .85);
-
-  g.gain.value = .25; o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + .9);
-
-}
-
-function pickLang(l){
-
-  const voices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
-
-  if (l === 'mr' && !voices.some(v => v.lang.toLowerCase().startsWith('mr'))) return 'hi-IN';
-
-  return VOICE_LANG[l];
-
-}
-
-function speak(text){
-
-  if (!soundOn || !S.voice || !('speechSynthesis' in window)) return;
-
-  speechSynthesis.cancel();
-
-  const u = new SpeechSynthesisUtterance(text);
-
-  u.lang = pickLang(S.lang); u.rate = .95;
-
-  speechSynthesis.speak(u);
-
-}
-
-function buzz(p){ if (S.vibrate && navigator.vibrate) navigator.vibrate(p); }
-
-
-
-async function enableSound(){
-
-  soundOn = true; soundTouched = true; ensureCtx();
-
-  try { if (navigator.wakeLock) await navigator.wakeLock.request('screen'); } catch(e){}
-
-  paintSound(); chime();
-
-}
-
-function paintSound(){
-
-  const b = $('#soundBtn');
-
-  b.classList.toggle('on', soundOn);
-
-  b.textContent = soundOn ? '🔊 Voice & Siren ON (Tap to mute)' : '🔇 Tap to enable Voice & Siren';
-
-}
-
-$('#soundBtn').onclick = () => { if (soundOn) { soundOn = false; soundTouched = true; window.speechSynthesis && speechSynthesis.cancel(); paintSound(); } else enableSound(); };
-
-function autoSound(){ if (!soundTouched) enableSound(); }
-
-
-
-/* ---------- status display ---------- */
-
-let shown = 'normal', emergency = null, sirenT = null, speakT = null;
-
-function showCat(cat){
-
-  if (emergency && cat !== 'emergency') return;
-
-  shown = cat;
-
-  const c = CATS[cat], el = $('#status');
-
-  el.style.setProperty('--c', c.color);
-
-  el.classList.toggle('is-emergency', cat === 'emergency');
-
-  document.body.classList.toggle('idle', cat === 'normal');
-
-  $('#stIcon').textContent = c.icon;
-
-  $('#stTitle').textContent = c.msg[S.lang];
-
-  $('#stSub').textContent = cat === 'normal' ? 'All fingers straight. Monitoring…' : `${c.name} request · ${patternText(c.pattern)} bent`;
-
-}
-
-function tickEmergency(){
-
-  if (!emergency) return;
-
-  const s = Math.floor((Date.now() - emergency.since) / 1000);
-
-  $('#stSub').textContent = `ACTIVE for ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} — waiting for caretaker`;
-
-}
-
-
-
-/* ---------- history ---------- */
-
-const fmtTime = ts => {
-
-  const d = new Date(ts), t = d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-
-  return d.toDateString() === new Date().toDateString() ? t : d.toLocaleDateString([], { day:'2-digit', month:'short' }) + ' ' + t;
-
-};
-
-function renderHistory(){
-
-  const list = $('#hist');
-
-  if (!history.length) list.innerHTML = '<li class="empty">No alerts yet. All quiet 🌿</li>';
-
-  else list.innerHTML = history.slice(0, 60).map(h => {
-
-    const c = CATS[h.cat] || CATS.help;
-
-    const ack = h.ackAt ? `<small>✅ Acknowledged after ${Math.max(1, Math.round((h.ackAt - h.ts) / 1000))}s</small>` : (h.cat === 'emergency' ? '<small>⚠️ Not acknowledged</small>' : '');
-
-    return `<li class="hi" style="--c:${c.color}"><span>${c.icon}</span><span class="m">${c.msg[S.lang]}${ack}</span><time>${fmtTime(h.ts)}</time></li>`;
-
-  }).join('');
-
-  const today = new Date().toDateString();
-
-  const counts = {};
-
-  history.filter(h => new Date(h.ts).toDateString() === today).forEach(h => counts[h.cat] = (counts[h.cat] || 0) + 1);
-
-  const chips = Object.entries(counts).map(([k, n]) => `<span class="chip" style="color:${CATS[k].color}">${CATS[k].icon} ${n}</span>`).join('');
-
-  $('#stats').innerHTML = chips ? chips + '<span class="chip">today</span>' : '<span class="chip">No alerts today</span>';
-
-}
-
-function addHistory(cat){
-
-  const e = { id: Date.now(), ts: Date.now(), cat };
-
-  history.unshift(e); history = history.slice(0, 200);
-
-  store.set('history', history); renderHistory();
-
-  return e;
-
-}
-
-$('#clearBtn').onclick = () => { if (history.length && confirm('Clear all alert history?')) { history = []; store.set('history', history); renderHistory(); } };
-
-$('#exportBtn').onclick = () => {
-
-  if (!history.length) { toast('Nothing to export yet'); return; }
-
-  const rows = ['time,type,message,acknowledged_after_sec'].concat(history.map(h =>
-
-    [new Date(h.ts).toISOString(), CATS[h.cat].name, '"' + CATS[h.cat].msg.en + '"', h.ackAt ? Math.round((h.ackAt - h.ts) / 1000) : ''].join(',')));
-
-  const a = document.createElement('a');
-
-  a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type:'text/csv' }));
-
-  a.download = 'glove-alerts.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-
-};
-
-
-
-/* ---------- alerts ---------- */
-
-function fire(cat){
-
-  const c = CATS[cat], entry = addHistory(cat);
-
-  showCat(cat);
-
-  if (cat === 'emergency'){
-
-    if (emergency) return;
-
-    emergency = { since: Date.now(), entry };
-
-    document.body.classList.add('alarm');
-
-    siren(); sirenT = setInterval(siren, 1000);
-
-    speak(c.msg[S.lang]); speakT = setInterval(() => speak(c.msg[S.lang]), 9000);
-
-    buzz([400, 150, 400, 150, 400]);
-
-    tickEmergency();
-
-  } else {
-
-    chime(); setTimeout(() => speak(c.msg[S.lang]), 450); buzz([200, 100, 200]);
-
-  }
-
-}
-
-$('#ackBtn').onclick = () => {
-
-  if (!emergency) return;
-
-  emergency.entry.ackAt = Date.now(); store.set('history', history);
-
-  clearInterval(sirenT); clearInterval(speakT);
-
-  if ('speechSynthesis' in window) speechSynthesis.cancel();
-
-  emergency = null; document.body.classList.remove('alarm');
-
-  buzz(0); showCat('normal'); renderHistory(); toast('Emergency acknowledged ✅');
-
-};
-
-
-
-/* ---------- data sources ---------- */
-
-const simBent = [false, false, false];
-
-const simCur = [cal[0].s, cal[1].s, cal[2].s];
-
-function simValues(){
-
-  return simCur.map((v, i) => {
-
-    const target = simBent[i] ? cal[i].b : cal[i].s;
-
-    simCur[i] = v + (target - v) * .35;
-
-    return simCur[i] + (Math.random() - .5) * 40;
-
-  });
-
-}
-
-async function fetchLive(){
-
-  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 1500);
-
-  try {
-
-    const r = await fetch('/status', { signal: ctrl.signal, cache: 'no-store' });
-
-    const j = await r.json();
-
-    const v = [j.f1, j.f2, j.f3].map(Number);
-
-    return v.some(isNaN) ? null : v;
-
-  } catch(e){ return null; } finally { clearTimeout(t); }
-
-}
-
-let connState = '';
-
-function setConn(st){
-
-  if (st === connState) return; connState = st;
-
-  const p = $('#pill');
-
-  p.className = 'pill' + (st === 'live' ? ' live' : st === 'off' ? ' off' : '');
-
-  $('#pillTxt').textContent = st === 'live' ? 'ESP32 connected' : st === 'off' ? 'ESP32 not reachable' : 'Demo mode';
-
-}
-
-
-
-/* ---------- calibration ---------- */
-
-let calib = null;
-
-function calibrate(kind){
-
-  if (S.mode !== 'live') { toast('Switch to Live ESP32 mode first'); return; }
-
-  toast(kind === 's' ? 'Keep all fingers STRAIGHT… starting in 3s' : 'BEND all fingers fully… starting in 3s');
-
-  setTimeout(() => {
-
-    calib = { samples: [] };
-
-    setTimeout(() => {
-
-      const sm = calib.samples; calib = null;
-
-      if (!sm.length) { toast('No data received. Check connection.'); return; }
-
-      F.forEach((_, i) => { cal[i][kind] = Math.round(sm.reduce((a, r) => a + r[i], 0) / sm.length); });
-
-      store.set('cal', cal);
-
-      const weak = cal.some(c => Math.abs(c.b - c.s) < 300);
-
-      toast(weak ? 'Saved, but straight & bent values are too close. Calibrate both again.' : (kind === 's' ? 'Straight position saved ✔' : 'Bent position saved ✔'));
-
-    }, 1200);
-
-  }, 3000);
-
-}
-
-$('#calS').onclick = () => calibrate('s');
-
-$('#calB').onclick = () => calibrate('b');
-
-
-
-/* ---------- main loop ---------- */
-
-const pctOf = (v, i) => { const { s, b } = cal[i]; return b === s ? 0 : (v - s) / (b - s); };
-
-let cand = 0, candSince = 0, lastFired = 0, busy = false;
-
-
-
-function handle(vals, now){
-
-  if (calib) calib.samples.push(vals.slice());
-
-  const flags = vals.map((v, i) => pctOf(v, i) > S.thr / 100);
-
-  vals.forEach((v, i) => {
-
-    const el = $('#fg' + i);
-
-    el.querySelector('.fill').style.height = clamp(pctOf(v, i), 0, 1) * 100 + '%';
-
-    el.querySelector('.fval').textContent = Math.round(v);
-
-    el.classList.toggle('bent', flags[i]);
-
-  });
-
-  const mask = flags.reduce((m, f, i) => m | (f ? 1 << i : 0), 0);
-
-  if (mask !== cand) { cand = mask; candSince = now; }
-
-  const held = now - candSince;
-
-
-
-  if (mask === 0){
-
-    if (held > 500) lastFired = 0;
-
-    if (held > 3500 && shown !== 'normal' && !emergency) showCat('normal');
-
-    $('#holdBar').style.width = '0';
-
-    return;
-
-  }
-
-  const c = CATS[BY_MASK[mask]];
-
-  if (mask !== lastFired){
-
-    $('#holdBar').style.width = clamp(held / S.hold, 0, 1) * 100 + '%';
-
-    $('#status').style.setProperty('--c', emergency ? CATS.emergency.color : c.color);
-
-    if (held >= S.hold){ lastFired = mask; $('#holdBar').style.width = '0'; fire(BY_MASK[mask]); }
-
-  } else $('#holdBar').style.width = '0';
-
-}
-
-
-
-async function tick(){
-
-  if (busy) return; busy = true;
-
-  try {
-
-    let vals;
-
-    if (S.mode === 'demo'){ vals = simValues(); setConn('demo'); }
-
-    else { vals = await fetchLive(); if (!vals){ setConn('off'); return; } setConn('live'); }
-
-    handle(vals, Date.now());
-
-  } finally { busy = false; }
-
-}
-
-
-
-/* ---------- controls ---------- */
-
-function paintSim(){ simF.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', simBent[i])); }
-
-simF.onclick = e => { const b = e.target.closest('button'); if (!b) return; autoSound(); simBent[+b.dataset.i] = !simBent[+b.dataset.i]; paintSim(); };
-
-presetsEl.onclick = e => {
-
-  const b = e.target.closest('button'); if (!b) return; autoSound();
-
-  const m = +b.dataset.p; F.forEach((_, i) => simBent[i] = !!(m & (1 << i))); paintSim();
-
-};
-
-document.addEventListener('keydown', e => {
-
-  if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) || S.mode !== 'demo') return;
-
-  if (e.key >= '1' && e.key <= '3'){ autoSound(); simBent[+e.key - 1] = !simBent[+e.key - 1]; paintSim(); }
-
-  if (e.key === '0'){ simBent.fill(false); paintSim(); }
-
-});
-
-
-
-function applyMode(){
-
-  document.body.classList.toggle('live', S.mode === 'live');
-
-  document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
-
-  if (S.mode === 'demo') setConn('demo');
-
-}
-
-$('#modeSeg').onclick = e => {
-
-  const b = e.target.closest('button'); if (!b) return;
-
-  S.mode = b.dataset.mode; saveS(); connState = ''; applyMode();
-
-  if (S.mode === 'live') setConn('off');
-
-};
-
-
-
-const dlg = $('#settings');
-
-function syncSettings(){
-
-  $('#lang').value = S.lang; $('#thr').value = S.thr; $('#hold').value = S.hold;
-
-  $('#thrV').textContent = S.thr; $('#holdV').textContent = S.hold;
-
-  $('#voice').checked = S.voice; $('#siren').checked = S.siren; $('#vibrate').checked = S.vibrate;
-
-}
-
-$('#openSettings').onclick = () => { syncSettings(); dlg.showModal(); };
-
-$('#closeSettings').onclick = () => dlg.close();
-
-$('#lang').onchange = e => { S.lang = e.target.value; saveS(); showCat(emergency ? 'emergency' : shown); renderHistory(); renderLegend(); speak(CATS.normal.msg[S.lang]); };
-
-$('#thr').oninput = e => { S.thr = +e.target.value; $('#thrV').textContent = S.thr; saveS(); placeTicks(); };
-
-$('#hold').oninput = e => { S.hold = +e.target.value; $('#holdV').textContent = S.hold; saveS(); };
-
-['voice', 'siren', 'vibrate'].forEach(k => $('#' + k).onchange = e => { S[k] = e.target.checked; saveS(); });
-
-$('#resetCal').onclick = () => { cal = F.map(() => ({ s:800, b:2600 })); store.set('cal', cal); toast('Calibration reset to defaults'); };
-
-
-
-/* ---------- init ---------- */
-
-renderLegend(); renderHistory(); placeTicks(); paintSim(); paintSound(); applyMode(); showCat('normal');
-
-if (S.mode === 'live') setConn('off');
-
-if ('speechSynthesis' in window) speechSynthesis.getVoices();
-
-setInterval(tick, 200);
-
-setInterval(tickEmergency, 1000);
-
-})();
-
-</script>
-
-</body>
-
-</html>
-
-Your HTML file is ready
-
-HTML icon
-index
- HTML 
-तुमची index.html फाइल तयार करण्यात आली आहे. तुम्ही ती वर दिलेल्या फाइल टॅगवरून डाउनलोड करू शकता.
-
-ही फाइल GitHub वर कशी अपलोड करायची?
-ब्राऊझरवरून थेट अपलोड करायची असल्यास:
-
-GitHub वर तुमच्या repository मध्ये जा.
-
-"Add file" वर क्लिक करून "Upload files" निवडा.
-
-डाउनलोड केलेली index.html फाइल ड्रॅग & ड्रॉप करा.
-
-खाली "Commit changes" वर क्लिक करा.
-
-टर्मिनल / Git द्वारे अपलोड करायची असल्यास:
-
-ही फाइल तुमच्या प्रोजेक्ट फोल्डरमध्ये ठेवा.
-
-टर्मिनलमध्ये खालील कमांड्स रन करा:
-
-Bash
-git add index.html
-git commit -m "Add index.html for Smart Glove Care Pro"
-git push origin main
-file upload keli aahe next steps sang
-
-फाइल अपलोड झाल्यानंतर ती वेबसाइट म्हणून थेट इंटरनेटवर लाइव्ह करण्यासाठी (GitHub Pages द्वारे) खालील सोप्या स्टेप्स करा:
-
-१. GitHub Pages सुरू करा (वेबसाइट लाइव्ह करण्यासाठी)
-तुमची index.html फाइल असल्याने ती लगेच एक चालू वेब ॲप म्हणून काम करेल:
-
-तुमच्या GitHub repository मध्ये वर असणाऱ्या Settings (⚙️) टॅबवर क्लिक करा.
-
-डाव्या बाजूच्या मेनूमधून Pages हा पर्याय निवडा.
-
-Build and deployment खाली Branch चा पर्याय दिसेल:
-
-None च्या जागी main (किंवा master) निवडा.
-
-फोल्डर / (root) च राहू द्या.
-
-Save बटणावर क्लिक करा.
-
-२. तुमची लाइव्ह लिंक मिळवा
-साधारण १ ते २ मिनिटे थांबा आणि पेज रिफ्रेश (Reload) करा.
-
-वरच्या बाजूला हिरव्या रंगात असा मेसेज दिसेल:
-
-"Your site is live at https://<username>.github.io/<repo-name>/"
-
-त्या लिंकवर क्लिक करा; तुमचा Smart Glove Care Pro डॅशबोर्ड ब्राऊझरमध्ये लाइव्ह सुरू होईल.
-
-३. प्रोजेक्टसाठी README फाइल तयार करा (ऐच्छिक पण महत्त्वाचे)
-लोकांना तुमच्या प्रोजेक्टबद्दल माहिती व्हावी म्हणून एक README.md फाइल जोडा:
-
-रिपॉझिटरीच्या होमपेजवर "Add a README" बटणावर क्लिक करा.
-
-त्यात प्रोजेक्टचे नाव, त्याचे काम (उदा. Flex sensors आधारित स्मार्ट ग्लोव्ह), लाइव्ह वेबसाइटची लिंक आणि फीचर्स लिहून खाली "Commit changes" करा.
-
-ESP32 कोड GitHub वर कसा मॅनेज करायचा हे जाणून घ्यायचे आहे का?
-
-Yes
-nahi visit site kelevar kahich dist nahi fkt smart gloves dist aahe
-
-He samasya sadharnataha JavaScript execution block jhalyamule kinva CSS variable render na jhalyamule hote. Fakt header madhle title disat asel tar pudhil ghoshti check kara:
-
-Browser Console Error Check Kara:
-
-Laptop/PC var asal tar F12 daba kinva screen var right click karun Inspect -> Console tab madhe ja.
-
-Tithe kuthli red error (laal rangachi error) yete ka te bagha. Jar script madhe error asel tar khalach dynamic content generate hot nahi.
-
-Demo Mode Active Karun Bagha:
-
-Default script madhe mode: 'live' set aslyamule page suruvatila live ESP32 kade data sathi request pathavte (/status).   
-HTML
-+ 1
-
-Internet var GitHub Pages varun he open kelayavar ESP32 cha IP (/status) milat nahi, mhanun connection fail hovu shakto.   
-HTML
-+ 1
-
-Screen var jar Connection box madhe 🎮 Demo button disat asel tar tyavar click kara.   
-HTML
-
-CSS / Dark Background Problem:
-
-CSS madhe background color #070d1a ani text color dilay. Kadhi kadhi browser cache mule poorn layout load hot nahi.   
-HTML
-
-Page Hard Refresh kara:
-
-PC var: Ctrl + Shift + R (kinva Cmd + Shift + R on Mac)
-
-Mobile var: Browser cha history/cache clear karun link punha open kara.
-
-File Name Check Kara:
-
-GitHub repo madhe file che naav barobar small letters madhe index.html ch ahe na he nishchit kara (Index.html kinva index.HTML asel tar problems yetat).
-
-Tula screen var exactly kay kay distay kinva Inspect Console madhe konti red line error yete te sangashil ka?
-
-step by step guid kar pahily pasun
-
-कोडमध्ये JavaScript आणि HTML चे घटक जोडलेले आहेत. जर फक्त "Smart Glove Care" एवढेच नाव दिसत असेल, तर त्याचा अर्थ JavaScript ने खालचे सेक्शन्स (fingers, legends, stats) अजून तयार केलेले नाहीत.   
-HTML
-+ 1
-
-सुरवातीपासून हे सर्व नीट सेट करण्यासाठी खालील स्टेप्स फॉलो करा:
-
-पायरी १: GitHub वरील कोड तपासा आणि अपडेट करा
-काही वेळा कॉपी-पेस्ट करताना लॅपटॉप किंवा मोबाईलमध्ये कोडमधील काही चिन्हे (उदा. quotes किंवा non-breaking spaces &nbsp;) बदलतात, ज्यामुळे JavaScript मध्ये एरर येते आणि पुढचा स्क्रीन रेंडर होत नाही.
-
-तुमच्या GitHub repository मध्ये जा.
-
-index.html फाइलवर क्लिक करा.
-
-वर उजव्या कोपऱ्यात असणाऱ्या पेन्सिलच्या आयकॉनवर (Edit this file) क्लिक करा.
-
-सर्व कोड सिलेक्ट करून (Ctrl + A) डिलीट करा.
-
-खाली दिलेला स्वच्छ आणि दुरुस्त केलेला कोड संपूर्ण कॉपी करा आणि तिथे पेस्ट करा:
-
-HTML
-<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#070d1a">
-<title>Smart Glove Care Pro</title>
+<meta name="theme-color" content="#0a1626">
+<title>Smart Glove Care</title>
 <style>
-  :root{--bg:#070d1a;--surface:rgba(255,255,255,.045);--surface2:rgba(255,255,255,.08);--line:rgba(255,255,255,.09);--text:#eef3fb;--sub:#8fa0b8;--accent:#38e1c6;--ok:#34d399;--warn:#fbbf24;--bad:#f43f5e;--c:#34d399;--radius:20px}
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{-webkit-text-size-adjust:100%}
-  body{font-family:ui-rounded,"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:max(14px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom));overflow-x:hidden}
-  .bg{position:fixed;inset:0;z-index:-2;background:radial-gradient(60% 50% at 12% 0%,rgba(56,225,198,.16),transparent 70%),radial-gradient(50% 45% at 100% 20%,rgba(96,165,250,.14),transparent 70%),radial-gradient(60% 50% at 50% 110%,rgba(167,139,250,.12),transparent 70%),var(--bg)}
-  .alarm-overlay{position:fixed;inset:0;z-index:50;pointer-events:none;opacity:0;transition:opacity .3s}
-  body.alarm .alarm-overlay{opacity:1;animation:flash .8s infinite alternate;box-shadow:inset 0 0 0 6px var(--bad),inset 0 0 120px rgba(244,63,94,.55)}
-  @keyframes flash{from{background:rgba(244,63,94,.05)}to{background:rgba(244,63,94,.22)}}
-  .app{max-width:1020px;margin:0 auto;display:grid;gap:16px;grid-template-columns:1fr}
-  @media(min-width:880px){.app{grid-template-columns:1.1fr .9fr;align-items:start}header,.top-bars{grid-column:1/-1}}
-  .col{display:grid;gap:16px}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:12px}
-  .logo{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.5rem;background:linear-gradient(135deg,rgba(56,225,198,.3),rgba(96,165,250,.3));border:1px solid var(--line)}
-  .brand h1{font-size:1.2rem;font-weight:800;letter-spacing:-.01em}
-  .brand p{font-size:.78rem;color:var(--sub)}
-  .hdr-r{display:flex;align-items:center;gap:8px}
-  .pill{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:99px;font-size:.78rem;font-weight:700;background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.25)}
-  .pill i{width:8px;height:8px;border-radius:50%;background:currentColor;animation:blink 1.6s infinite}
-  .pill.live{background:rgba(52,211,153,.12);color:var(--ok);border-color:rgba(52,211,153,.3)}
-  .pill.off{background:rgba(244,63,94,.12);color:var(--bad);border-color:rgba(244,63,94,.3)}
-  @keyframes blink{50%{opacity:.25}}
-  .icon-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:1.1rem;cursor:pointer}
-  .icon-btn:hover{background:var(--surface2)}
-  .sound{width:100%;padding:13px;border-radius:14px;border:1px solid var(--line);font-weight:700;font-size:.9rem;cursor:pointer;color:#fff;background:linear-gradient(90deg,#2563eb,#7c3aed);transition:.2s}
-  .sound.on{background:var(--surface);color:var(--ok);border-color:rgba(52,211,153,.4)}
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;backdrop-filter:blur(10px)}
-  .card h2{font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--sub);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .row-btns{display:flex;gap:6px;flex-wrap:wrap}
-  .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:.8rem;font-weight:700;cursor:pointer;transition:.15s;text-transform:none;letter-spacing:0}
-  .btn:hover{background:var(--surface2);border-color:rgba(255,255,255,.2)}
-  .btn.danger{color:#fda4af}
-  .status{--c:#34d399;text-align:center;padding:30px 20px 22px;position:relative;overflow:hidden;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--c) 26%,transparent),transparent 72%),var(--surface);border-color:color-mix(in srgb,var(--c) 55%,transparent);transition:border-color .4s,background .4s}
-  .status .ico{width:104px;height:104px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font-size:3.4rem;position:relative;background:color-mix(in srgb,var(--c) 18%,transparent);border:1px solid color-mix(in srgb,var(--c) 50%,transparent)}
-  .status .ico::after{content:"";position:absolute;inset:-10px;border-radius:50%;border:2px solid var(--c);opacity:0;animation:ring 2.2s infinite}
-  body:not(.idle) .status .ico::after{opacity:.5}
-  @keyframes ring{0%{transform:scale(.85);opacity:.6}100%{transform:scale(1.25);opacity:0}}
-  .status h3{font-size:1.65rem;font-weight:800;line-height:1.2;margin-bottom:6px;letter-spacing:-.01em}
-  .status p{font-size:.9rem;color:var(--sub)}
-  .hold{height:5px;border-radius:5px;background:rgba(255,255,255,.07);margin:18px auto 0;max-width:260px;overflow:hidden}
-  .hold div{height:100%;width:0;background:var(--c);transition:width .12s linear}
-  .ack{display:none;margin:16px auto 0;padding:13px 26px;border:none;border-radius:14px;background:#fff;color:#7f1d1d;font-size:1rem;font-weight:800;cursor:pointer}
-  .status.is-emergency{animation:shake 1s infinite}
-  .status.is-emergency .ack{display:inline-block}
-  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
-  .fingers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  .finger{text-align:center;padding:12px 6px;border-radius:16px;background:rgba(0,0,0,.2);border:1px solid var(--line);transition:.2s}
-  .finger.bent{border-color:var(--warn);background:rgba(251,191,36,.08)}
-  .cap{position:relative;width:46px;height:130px;margin:0 auto 10px;border-radius:24px;background:rgba(255,255,255,.06);overflow:hidden;border:1px solid var(--line)}
-  .fill{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(0deg,#38e1c6,#60a5fa);transition:height .2s,background .2s}
-  .finger.bent .fill{background:linear-gradient(0deg,#fbbf24,#fb923c)}
-  .tick{position:absolute;left:0;right:0;height:2px;background:#fff;opacity:.75}
-  .fname{font-weight:800;font-size:.86rem}
-  .fpin{font-size:.7rem;color:var(--sub)}
-  .fval{margin-top:4px;font-size:.9rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent)}
-  .finger.bent .fval{color:var(--warn)}
-  .hint{font-size:.74rem;color:var(--sub);margin-top:12px;line-height:1.5}
-  .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line);margin-bottom:12px}
-  .seg button{padding:9px;border:none;border-radius:9px;background:transparent;color:var(--sub);font-weight:700;font-size:.85rem;cursor:pointer}
-  .seg button.on{background:var(--surface2);color:var(--text)}
-  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
-  .field label{font-size:.78rem;color:var(--sub);font-weight:600}
-  select{width:100%;padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);font-size:.92rem}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .live-only{display:none}
-  body.live .live-only{display:block}
-  body.live .demo-only{display:none}
-  .sim-f{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-  .sim-f button{padding:14px 6px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-weight:800;font-size:.9rem;cursor:pointer;transition:.15s}
-  .sim-f button.on{background:rgba(251,191,36,.15);border-color:var(--warn);color:var(--warn)}
-  .presets{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-  .presets button{padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--text);font-weight:700;font-size:.82rem;cursor:pointer;text-align:left}
-  .presets button:hover{border-color:var(--accent)}
-  .legend{display:grid;gap:8px}
-  .lg{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:13px;background:rgba(0,0,0,.2);border-left:4px solid var(--c)}
-  .lg .e{font-size:1.3rem}
-  .lg .t{flex:1;font-weight:700;font-size:.9rem}
-  .dots{display:flex;gap:5px}
-  .dots i{width:11px;height:11px;border-radius:50%;border:2px solid var(--sub)}
-  .dots i.f{background:var(--c);border-color:var(--c)}
-  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-  .chip{padding:5px 10px;border-radius:99px;font-size:.78rem;font-weight:700;background:rgba(0,0,0,.25);border:1px solid var(--line)}
-  .hist{list-style:none;max-height:300px;overflow-y:auto;display:grid;gap:8px;padding-right:2px}
-  .hi{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.22);border-left:4px solid var(--c);font-size:.88rem}
-  .hi .m{flex:1;font-weight:700}
-  .hi small{display:block;color:var(--sub);font-weight:500;font-size:.72rem;margin-top:2px}
-  .hi time{font-size:.74rem;color:var(--sub);white-space:nowrap}
-  .empty{text-align:center;color:var(--sub);font-size:.85rem;padding:18px}
-  dialog{margin:auto;border:1px solid var(--line);border-radius:20px;background:#0e1626;color:var(--text);padding:22px;width:min(420px,92vw)}
-  dialog::backdrop{background:rgba(0,0,0,.6);backdrop-filter:blur(3px)}
-  dialog h2{font-size:1.1rem;margin-bottom:16px}
-  .sw{display:flex;align-items:center;justify-content:space-between;padding:9px 0;font-size:.9rem;font-weight:600}
-  .sw input{width:20px;height:20px;accent-color:var(--accent)}
-  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,30px);opacity:0;background:#fff;color:#0b1220;padding:11px 18px;border-radius:12px;font-weight:700;font-size:.86rem;z-index:99;transition:.3s;pointer-events:none;max-width:90vw;text-align:center}
-  .toast.show{opacity:1;transform:translate(-50%,0)}
+:root{
+  --bg:#0a1626; --bg2:#0f2036; --card:#12263d; --card2:#183050; --line:rgba(255,255,255,.08);
+  --text:#eef4fb; --sub:#9db2cc; --accent:#2dd4bf; --c:#2dd4bf; --danger:#f43f5e;
+  --r:22px;
+  --font:"Segoe UI","Noto Sans","Noto Sans Devanagari","Nirmala UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg)}
+body{font-family:var(--font);color:var(--text);min-height:100vh;line-height:1.45;
+  background:radial-gradient(900px 500px at 15% -10%,rgba(45,212,191,.14),transparent 60%),
+             radial-gradient(800px 500px at 100% 0%,rgba(56,189,248,.10),transparent 60%),var(--bg);
+  padding:max(14px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom));}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+.app{max-width:1080px;margin:0 auto}
+
+/* header */
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;
+  background:linear-gradient(145deg,#14b8a6,#0ea5e9);box-shadow:0 8px 22px rgba(20,184,166,.35)}
+h1{font-size:20px;letter-spacing:.2px}
+.brand p{font-size:12.5px;color:var(--sub)}
+.hdr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;background:var(--card);
+  border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--sub)}
+.pill i{width:9px;height:9px;border-radius:50%;background:#64748b}
+.pill.live{color:#6ee7b7}.pill.live i{background:#34d399;box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:ping 1.8s infinite}
+.pill.off{color:#fca5a5}.pill.off i{background:#f87171}
+.pill.demo i{background:#fbbf24}
+@keyframes ping{70%{box-shadow:0 0 0 8px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.langs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px}
+.langs button{padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700;color:var(--sub)}
+.langs button.on{background:var(--accent);color:#04201c}
+.icon-btn{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--line);font-size:18px}
+
+.sound{width:100%;padding:12px 16px;border-radius:16px;font-weight:700;font-size:14.5px;margin-bottom:14px;
+  background:rgba(251,191,36,.12);border:1px dashed rgba(251,191,36,.5);color:#fcd34d}
+.sound.on{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.4);color:#6ee7b7}
+
+main{display:grid;gap:14px}
+@media(min-width:900px){main{grid-template-columns:1.1fr .9fr;align-items:start}}
+.col{display:grid;gap:14px}
+.card{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:1.1px;color:var(--sub);font-weight:700;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:8px 13px;border-radius:12px;background:var(--card2);border:1px solid var(--line);font-size:13px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--text)}
+.btn:active{transform:scale(.97)}
+.btn.danger{color:#fda4af}
+.hint{font-size:12.5px;color:var(--sub);margin-top:12px}
+
+/* status */
+.status{--c:#34d399;text-align:center;padding:30px 18px 22px;position:relative;overflow:hidden;
+  background:radial-gradient(420px 260px at 50% 0%,color-mix(in srgb,var(--c) 26%,transparent),transparent 70%),linear-gradient(180deg,var(--card),var(--bg2));
+  border-color:color-mix(in srgb,var(--c) 45%,transparent);transition:border-color .4s}
+.status .ico{width:104px;height:104px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font-size:54px;
+  background:color-mix(in srgb,var(--c) 20%,transparent);border:2px solid color-mix(in srgb,var(--c) 60%,transparent)}
+.status .tag{display:inline-block;font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;padding:5px 12px;border-radius:999px;
+  background:color-mix(in srgb,var(--c) 22%,transparent);color:var(--c);margin-bottom:10px}
+.status h3{font-size:clamp(22px,5.4vw,32px);line-height:1.25;font-weight:800;max-width:640px;margin:0 auto}
+.status p{color:var(--sub);margin-top:8px;font-size:14px}
+.hold{height:6px;border-radius:6px;background:rgba(255,255,255,.08);margin:18px auto 0;max-width:360px;overflow:hidden}
+.hold div{height:100%;width:0;background:var(--c);transition:width .15s linear}
+.ack{display:none;margin:18px auto 0;padding:14px 26px;border-radius:16px;background:#fff;color:#be123c;font-weight:800;font-size:16px}
+.status.is-emergency .ack{display:inline-block}
+.status.pulse .ico{animation:pop .7s ease}
+@keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+body.alarm .alarm-overlay{opacity:1}
+.alarm-overlay{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;z-index:5;
+  box-shadow:inset 0 0 0 6px var(--danger),inset 0 0 90px rgba(244,63,94,.55);animation:flash 1s infinite}
+@keyframes flash{50%{box-shadow:inset 0 0 0 6px #fb7185,inset 0 0 40px rgba(244,63,94,.2)}}
+.status.is-emergency{border-color:var(--danger)}
+
+/* fingers */
+.fingers{display:grid;gap:12px}
+.finger{display:grid;grid-template-columns:86px 1fr 54px;align-items:center;gap:12px}
+.fname{font-weight:700;font-size:14px}.fname small{display:block;color:var(--sub);font-weight:500;font-size:11.5px}
+.bar{position:relative;height:16px;border-radius:10px;background:rgba(255,255,255,.07);overflow:visible}
+.fill{height:100%;width:0;border-radius:10px;background:linear-gradient(90deg,#38bdf8,#2dd4bf);transition:width .12s}
+.finger.bent .fill{background:linear-gradient(90deg,#fbbf24,#fb923c)}
+.tick{position:absolute;top:-4px;bottom:-4px;width:3px;border-radius:2px;background:#fff;opacity:.85}
+.fval{font-size:13px;color:var(--sub);text-align:right;font-variant-numeric:tabular-nums}
+
+/* segmented */
+.seg{display:grid;grid-template-columns:1fr 1fr;background:rgba(255,255,255,.05);border-radius:14px;padding:4px;margin-bottom:6px}
+.seg button{padding:10px;border-radius:11px;font-weight:700;font-size:14px;color:var(--sub)}
+.seg button.on{background:var(--accent);color:#04201c}
+body:not(.live) .live-only{display:none}
+body.live .demo-only{display:none}
+.sim-f{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.presets{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.sim-f button,.presets button{padding:11px;border-radius:12px;background:var(--card2);border:1px solid var(--line);font-weight:600;font-size:13.5px}
+.sim-f button.on{background:#fbbf24;color:#2a1c00}
+
+/* legend */
+.legend{display:grid;gap:9px}
+.lg{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;
+  background:color-mix(in srgb,var(--c) 10%,transparent);border:1px solid color-mix(in srgb,var(--c) 28%,transparent)}
+.lg .e{font-size:26px;text-align:center}
+.lg .t b{display:block;font-size:14px;color:var(--c)}
+.lg .t span{font-size:12.5px;color:var(--sub)}
+.dots{display:flex;gap:5px}
+.dots i{width:12px;height:22px;border-radius:6px;background:rgba(255,255,255,.14)}
+.dots i.f{background:var(--c)}
+
+/* history */
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.chip{padding:5px 11px;border-radius:999px;background:var(--card2);font-size:12.5px;font-weight:700;color:var(--sub)}
+.hist{list-style:none;display:grid;gap:8px;max-height:360px;overflow:auto}
+.hi{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;
+  background:rgba(255,255,255,.04);border-left:4px solid var(--c)}
+.hi .m{font-size:13.5px;font-weight:600}.hi small{display:block;color:var(--sub);font-weight:500;font-size:11.5px;margin-top:2px}
+.hi time{font-size:11.5px;color:var(--sub);white-space:nowrap}
+.empty{color:var(--sub);text-align:center;padding:18px;font-size:14px}
+
+/* settings */
+dialog{margin:auto;border:1px solid var(--line);border-radius:24px;background:var(--bg2);color:var(--text);width:min(440px,92vw);padding:22px}
+dialog::backdrop{background:rgba(2,8,20,.7);backdrop-filter:blur(3px)}
+dialog h2{font-size:18px;margin-bottom:14px}
+.field{margin-bottom:14px}.field label{display:block;font-size:13px;color:var(--sub);margin-bottom:6px}
+.field select,.field input[type=text]{width:100%;padding:11px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--text)}
+.field input[type=range]{width:100%;accent-color:var(--accent)}
+.sw{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-top:1px solid var(--line);font-size:14.5px}
+.sw input{width:20px;height:20px;accent-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,30px);background:#fff;color:#0a1626;padding:12px 18px;border-radius:14px;
+  font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:20;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:480px){.finger{grid-template-columns:72px 1fr 46px}}
 </style>
 </head>
-<body class="idle">
-<div class="bg"></div>
+<body>
 <div class="alarm-overlay"></div>
 
-<main class="app">
+<div class="app">
   <header>
     <div class="brand">
       <div class="logo">🧤</div>
-      <div><h1>Smart Glove Care</h1><p>Patient assistive alert system · offline</p></div>
+      <div><h1>Smart Glove Care</h1><p>Patient assistive alert system</p></div>
     </div>
     <div class="hdr-r">
-      <div class="pill" id="pill"><i></i><span id="pillTxt">Demo mode</span></div>
-      <button class="icon-btn" id="openSettings" title="Settings">⚙️</button>
+      <div class="pill" id="pill"><i></i><span id="pillTxt">Connecting…</span></div>
+      <div class="langs" id="langs">
+        <button data-l="en">EN</button><button data-l="mr">मराठी</button><button data-l="hi">हिं</button>
+      </div>
+      <button class="icon-btn" id="openSettings" title="Settings" aria-label="Settings">⚙️</button>
     </div>
   </header>
 
-  <div class="top-bars">
-    <button class="sound" id="soundBtn">🔇 Tap to enable Voice &amp; Siren</button>
-  </div>
+  <button class="sound" id="soundBtn">🔇 Tap to enable Voice &amp; Siren</button>
 
-  <div class="col">
-    <section class="card status" id="status">
-      <div class="ico" id="stIcon">😊</div>
-      <h3 id="stTitle">Patient is comfortable.</h3>
-      <p id="stSub">All fingers straight. Monitoring…</p>
-      <div class="hold"><div id="holdBar"></div></div>
-      <button class="ack" id="ackBtn">✅ I'm coming — Acknowledge</button>
-    </section>
+  <main>
+    <div class="col">
+      <section class="card status" id="status">
+        <div class="ico" id="stIcon">😊</div>
+        <div class="tag" id="stTag">All good</div>
+        <h3 id="stTitle">All is well. Patient is resting comfortably.</h3>
+        <p id="stSub">All fingers straight. Monitoring…</p>
+        <div class="hold"><div id="holdBar"></div></div>
+        <button class="ack" id="ackBtn">✅ I'm coming — Acknowledge</button>
+      </section>
 
-    <section class="card">
-      <h2>
-        <span>Live flex sensors</span>
-        <span class="row-btns live-only">
-          <button class="btn" id="calS">Calibrate straight</button>
-          <button class="btn" id="calB">Calibrate bent</button>
-        </span>
-      </h2>
-      <div class="fingers" id="fingers"></div>
-      <p class="hint">White line = trigger point. A gesture fires only after it is held steady, so accidental twitches are ignored.</p>
-    </section>
+      <section class="card">
+        <h2><span>Live flex sensors</span>
+          <span class="row-btns live-only">
+            <button class="btn" id="calS">Calibrate straight</button>
+            <button class="btn" id="calB">Calibrate bent</button>
+          </span>
+        </h2>
+        <div class="fingers" id="fingers"></div>
+        <p class="hint">White line = trigger point. A gesture fires only after it is held steady, so accidental twitches are ignored.</p>
+      </section>
 
-    <section class="card">
-      <h2>Connection</h2>
-      <div class="seg" id="modeSeg">
-        <button data-mode="demo">🎮 Demo</button>
-        <button data-mode="live">📡 Live ESP32</button>
-      </div>
-      <div class="live-only">
-        <p class="hint" style="margin-top:0">Works without internet. Connect every phone to the <b>Smart_Glove_WiFi</b> network and open <b>http://192.168.4.1</b>. All connected phones show the alerts.</p>
-      </div>
-      <div class="demo-only">
-        <h2 style="margin-top:4px">Simulate fingers</h2>
-        <div class="sim-f" id="simF"></div>
-        <div class="presets" id="presets"></div>
-        <p class="hint">Keyboard: press <b>1</b> <b>2</b> <b>3</b> to bend fingers, <b>0</b> to straighten all.</p>
-      </div>
-    </section>
-  </div>
+      <section class="card">
+        <h2>Connection</h2>
+        <div class="seg" id="modeSeg">
+          <button data-mode="demo">🎮 Demo</button>
+          <button data-mode="live">📡 Live ESP32</button>
+        </div>
+        <div class="live-only">
+          <p class="hint" style="margin-top:10px">ESP32: <b id="espShow"></b><br>
+          Phone/laptop and ESP32 must be on the same Wi-Fi / hotspot. IP change karaycha asel tar ⚙️ Settings madhe kar.</p>
+        </div>
+        <div class="demo-only">
+          <h2 style="margin:12px 0 0">Simulate fingers</h2>
+          <div class="sim-f" id="simF"></div>
+          <div class="presets" id="presets"></div>
+          <p class="hint">Keyboard: press <b>1</b> <b>2</b> <b>3</b> to bend fingers, <b>0</b> to straighten all.</p>
+        </div>
+      </section>
+    </div>
 
-  <div class="col">
-    <section class="card">
-      <h2>Gesture guide (7 Combinations)</h2>
-      <div class="legend" id="legend"></div>
-    </section>
+    <div class="col">
+      <section class="card">
+        <h2>Gesture guide · 7 messages</h2>
+        <div class="legend" id="legend"></div>
+      </section>
 
-    <section class="card">
-      <h2>
-        <span>Alert history</span>
-        <span class="row-btns">
-          <button class="btn" id="exportBtn">Export CSV</button>
-          <button class="btn danger" id="clearBtn">Clear</button>
-        </span>
-      </h2>
-      <div class="chips" id="stats"></div>
-      <ul class="hist" id="hist"></ul>
-    </section>
-  </div>
-</main>
+      <section class="card">
+        <h2><span>Alert history</span>
+          <span class="row-btns">
+            <button class="btn" id="exportBtn">Export CSV</button>
+            <button class="btn danger" id="clearBtn">Clear</button>
+          </span>
+        </h2>
+        <div class="chips" id="stats"></div>
+        <ul class="hist" id="hist"></ul>
+      </section>
+    </div>
+  </main>
+</div>
 
 <dialog id="settings">
   <h2>⚙️ Settings</h2>
+  <div class="field">
+    <label for="esp">ESP32 address (IP)</label>
+    <input type="text" id="esp" placeholder="192.168.9.73" autocomplete="off" inputmode="url">
+  </div>
   <div class="field">
     <label for="lang">Alert language (text + voice)</label>
     <select id="lang">
@@ -1444,6 +240,7 @@ HTML
     <label for="hold">Hold time before alert: <b id="holdV"></b> ms</label>
     <input type="range" id="hold" min="300" max="1500" step="100">
   </div>
+  <div class="row-btns" style="margin-bottom:10px"><button class="btn" id="testSound">🔊 Test sound &amp; voice</button></div>
   <label class="sw">Voice announcements <input type="checkbox" id="voice"></label>
   <label class="sw">Emergency siren <input type="checkbox" id="siren"></label>
   <label class="sw">Vibration (mobile) <input type="checkbox" id="vibrate"></label>
@@ -1471,30 +268,30 @@ const F = [
   { n:'Finger 3', pin:'GPIO 32' }
 ];
 
+/* Gesture -> message. pattern = bitmask: Finger1=1, Finger2=2, Finger3=4 */
 const CATS = {
   normal:   { icon:'😊', color:'#34d399', name:'All good', pattern:0,
-              msg:{ en:'Patient is comfortable.', mr:'रुग्ण आरामात आहे.', hi:'मरीज़ आराम से है।' } },
+    msg:{ en:'All is well. Patient is resting comfortably.', mr:'सर्व ठीक आहे. रुग्ण आरामात विश्रांती घेत आहे.', hi:'सब ठीक है। मरीज़ आराम से है।' } },
   water:    { icon:'💧', color:'#38bdf8', name:'Water', pattern:1,
-              msg:{ en:'I need water.', mr:'मला पाणी पाहिजे.', hi:'मुझे पानी चाहिए।' } },
+    msg:{ en:'I am thirsty. Please bring me some water.', mr:'मला तहान लागली आहे. कृपया पाणी आणा.', hi:'मुझे प्यास लगी है। कृपया पानी लाइए।' } },
   medicine: { icon:'💊', color:'#a78bfa', name:'Medicine', pattern:2,
-              msg:{ en:'I need my medicine.', mr:'मला औषध पाहिजे.', hi:'मुझे दवा चाहिए।' } },
+    msg:{ en:'It is time for my medicine. Please help me take it.', mr:'माझ्या औषधाची वेळ झाली आहे. कृपया मला औषध द्या.', hi:'मेरी दवा का समय हो गया है। कृपया दवा दीजिए।' } },
   food:     { icon:'🍲', color:'#4ade80', name:'Food', pattern:4,
-              msg:{ en:'I am hungry.', mr:'मला भूक लागली आहे.', hi:'मुझे भूख लगी है।' } },
-  help:     { icon:'🤝', color:'#fbbf24', name:'Help', pattern:3,
-              msg:{ en:'I need help.', mr:'मला मदत पाहिजे.', hi:'मुझे मदद चाहिए।' } },
+    msg:{ en:'I feel hungry. May I please have something to eat?', mr:'मला भूक लागली आहे. कृपया खायला द्या.', hi:'मुझे भूख लगी है। कृपया कुछ खाने को दीजिए।' } },
+  help:     { icon:'🤝', color:'#fbbf24', name:'Need help', pattern:3,
+    msg:{ en:'Please come to me. I need your help.', mr:'कृपया माझ्याजवळ या. मला तुमची मदत हवी आहे.', hi:'कृपया मेरे पास आइए। मुझे आपकी मदद चाहिए।' } },
   washroom: { icon:'🚻', color:'#2dd4bf', name:'Washroom', pattern:5,
-              msg:{ en:'I need the washroom.', mr:'मला स्वच्छतागृहात जायचे आहे.', hi:'मुझे शौचालय जाना है।' } },
+    msg:{ en:'I need to use the washroom. Please help me.', mr:'मला स्वच्छतागृहात जायचे आहे. कृपया मदत करा.', hi:'मुझे शौचालय जाना है। कृपया मदद कीजिए।' } },
   pain:     { icon:'🩹', color:'#fb923c', name:'Pain', pattern:6,
-              msg:{ en:'I am in pain.', mr:'मला वेदना होत आहेत.', hi:'मुझे दर्द हो रहा है।' } },
+    msg:{ en:'I am in pain. Please come and check on me.', mr:'मला वेदना होत आहेत. कृपया येऊन पाहा.', hi:'मुझे दर्द हो रहा है। कृपया आकर देखिए।' } },
   emergency:{ icon:'🚨', color:'#f43f5e', name:'Emergency', pattern:7,
-              msg:{ en:'Emergency! Come immediately!', mr:'आणीबाणी! लगेच या!', hi:'आपातकाल! तुरंत आइए!' } }
+    msg:{ en:'EMERGENCY! Please come immediately!', mr:'आणीबाणी! कृपया लगेच या!', hi:'आपातकाल! कृपया तुरंत आइए!' } }
 };
 const BY_MASK = {};
 Object.entries(CATS).forEach(([k, c]) => { if (c.pattern) BY_MASK[c.pattern] = k; });
 const VOICE_LANG = { en:'en-IN', mr:'mr-IN', hi:'hi-IN' };
 
-// Default mode 'demo' ठेवला आहे जेणेकरून वेबसाइटवर थेट बटणे आणि सेन्सर्स दिसतील
-const S = Object.assign({ mode:'demo', lang:'en', hold:600, thr:50, voice:true, siren:true, vibrate:true }, store.get('settings', {}));
+const S = Object.assign({ mode:'live', lang:'en', hold:600, thr:50, voice:true, siren:true, vibrate:true, esp:'192.168.9.73' }, store.get('settings', {}));
 
 let cal = store.get('cal', null);
 if (!Array.isArray(cal) || cal.length !== 3) cal = F.map(() => ({ s:800, b:2600 }));
@@ -1502,23 +299,30 @@ let history = store.get('history', []);
 
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const saveS = () => store.set('settings', S);
+const espUrl = () => {
+  let u = String(S.esp || '').trim().replace(/\/+$/, '');
+  if (!u) u = '192.168.9.73';
+  if (!/^https?:\/\//i.test(u)) u = 'http://' + u;
+  if (!/\/status$/i.test(u)) u += '/status';
+  return u;
+};
 let toastT;
 function toast(msg){
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600);
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2800);
 }
-function patternText(mask){
-  return F.map((f, i) => (mask & (1 << i)) ? f.n : null).filter(Boolean).join(' + ');
-}
+const patternText = mask => F.map((f, i) => (mask & (1 << i)) ? f.n : null).filter(Boolean).join(' + ');
 
+/* finger gauges */
 const fingersEl = $('#fingers');
 F.forEach((f, i) => {
   fingersEl.insertAdjacentHTML('beforeend',
-    `<div class="finger" id="fg${i}"><div class="cap"><div class="fill"></div><div class="tick"></div></div>
-     <div class="fname">${f.n}</div><div class="fpin">${f.pin}</div><div class="fval">–</div></div>`);
+    `<div class="finger" id="fg${i}"><div class="fname">${f.n}<small>${f.pin}</small></div>
+     <div class="bar"><div class="fill"></div><div class="tick"></div></div><div class="fval">–</div></div>`);
 });
-function placeTicks(){ document.querySelectorAll('.tick').forEach(t => t.style.bottom = S.thr + '%'); }
+const placeTicks = () => document.querySelectorAll('.tick').forEach(t => t.style.left = S.thr + '%');
 
+/* demo controls */
 const simF = $('#simF');
 F.forEach((f, i) => simF.insertAdjacentHTML('beforeend', `<button data-i="${i}">☝️ ${i + 1}</button>`));
 const presetsEl = $('#presets');
@@ -1526,15 +330,16 @@ Object.entries(CATS).forEach(([k, c]) => {
   if (k === 'normal') return;
   presetsEl.insertAdjacentHTML('beforeend', `<button data-p="${c.pattern}">${c.icon} ${c.name}</button>`);
 });
-presetsEl.insertAdjacentHTML('beforeend', `<button data-p="0" style="grid-column:span 2;text-align:center">✋ Straighten all (reset)</button>`);
+presetsEl.insertAdjacentHTML('beforeend', `<button data-p="0" style="grid-column:span 2">✋ Straighten all (reset)</button>`);
 
 function renderLegend(){
   $('#legend').innerHTML = Object.entries(CATS).filter(([k]) => k !== 'normal').map(([k, c]) => `
     <div class="lg" style="--c:${c.color}"><span class="e">${c.icon}</span>
-      <span class="t">${c.name} <small style="color:var(--sub);font-weight:500">(${c.msg[S.lang]})</small></span>
+      <span class="t"><b>${c.name}</b><span>${c.msg[S.lang]}</span></span>
       <span class="dots">${F.map((_, i) => `<i class="${c.pattern & (1 << i) ? 'f' : ''}"></i>`).join('')}</span></div>`).join('');
 }
 
+/* sound */
 let ctx = null, soundOn = false, soundTouched = false;
 function ensureCtx(){
   const A = window.AudioContext || window.webkitAudioContext;
@@ -1558,19 +363,27 @@ function siren(){
   o.frequency.linearRampToValueAtTime(600, t + .85);
   g.gain.value = .25; o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + .9);
 }
-function pickLang(l){
-  const voices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
-  if (l === 'mr' && !voices.some(v => v.lang.toLowerCase().startsWith('mr'))) return 'hi-IN';
-  return VOICE_LANG[l];
+let VOICES = [];
+function loadVoices(){ if ('speechSynthesis' in window) VOICES = speechSynthesis.getVoices() || []; }
+function pickVoice(l){
+  const find = p => VOICES.find(v => v.lang.toLowerCase().replace('_','-').startsWith(p));
+  if (l === 'mr') return find('mr') || find('hi') || find('en-in') || find('en') || null;
+  if (l === 'hi') return find('hi') || find('en-in') || find('en') || null;
+  return find('en-in') || find('en') || null;
 }
+let warnedVoice = false;
 function speak(text){
   if (!soundOn || !S.voice || !('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = pickLang(S.lang); u.rate = .95;
-  speechSynthesis.speak(u);
+  const v = pickVoice(S.lang);
+  if (v){ u.voice = v; u.lang = v.lang; } else u.lang = VOICE_LANG[S.lang];
+  if (S.lang !== 'en' && v && !v.lang.toLowerCase().startsWith(S.lang) && !warnedVoice){
+    warnedVoice = true; toast('Hya device var ' + (S.lang === 'mr' ? 'Marathi' : 'Hindi') + ' voice nahi. Dusri voice vaparli jat aahe, text barobar disel.');
+  }
+  speechSynthesis.cancel();
+  setTimeout(() => speechSynthesis.speak(u), 60);
 }
-function buzz(p){ if (S.vibrate && navigator.vibrate) navigator.vibrate(p); }
+const buzz = p => { if (S.vibrate && navigator.vibrate) navigator.vibrate(p); };
 
 async function enableSound(){
   soundOn = true; soundTouched = true; ensureCtx();
@@ -1580,11 +393,15 @@ async function enableSound(){
 function paintSound(){
   const b = $('#soundBtn');
   b.classList.toggle('on', soundOn);
-  b.textContent = soundOn ? '🔊 Voice & Siren ON (Tap to mute)' : '🔇 Tap to enable Voice & Siren';
+  b.textContent = soundOn ? '🔊 Voice & Siren ON (tap to mute)' : '🔇 Tap to enable Voice & Siren';
 }
-$('#soundBtn').onclick = () => { if (soundOn) { soundOn = false; soundTouched = true; window.speechSynthesis && speechSynthesis.cancel(); paintSound(); } else enableSound(); };
-function autoSound(){ if (!soundTouched) enableSound(); }
+$('#soundBtn').onclick = () => {
+  if (soundOn){ soundOn = false; soundTouched = true; window.speechSynthesis && speechSynthesis.cancel(); paintSound(); }
+  else enableSound();
+};
+const autoSound = () => { if (!soundTouched) enableSound(); };
 
+/* status card */
 let shown = 'normal', emergency = null, sirenT = null, speakT = null;
 function showCat(cat){
   if (emergency && cat !== 'emergency') return;
@@ -1594,8 +411,10 @@ function showCat(cat){
   el.classList.toggle('is-emergency', cat === 'emergency');
   document.body.classList.toggle('idle', cat === 'normal');
   $('#stIcon').textContent = c.icon;
+  $('#stTag').textContent = c.name;
   $('#stTitle').textContent = c.msg[S.lang];
-  $('#stSub').textContent = cat === 'normal' ? 'All fingers straight. Monitoring…' : `${c.name} request · ${patternText(c.pattern)} bent`;
+  $('#stSub').textContent = cat === 'normal' ? 'All fingers straight. Monitoring…' : `${patternText(c.pattern)} bent`;
+  el.classList.remove('pulse'); void el.offsetWidth; if (cat !== 'normal') el.classList.add('pulse');
 }
 function tickEmergency(){
   if (!emergency) return;
@@ -1603,6 +422,7 @@ function tickEmergency(){
   $('#stSub').textContent = `ACTIVE for ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} — waiting for caretaker`;
 }
 
+/* history */
 const fmtTime = ts => {
   const d = new Date(ts), t = d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
   return d.toDateString() === new Date().toDateString() ? t : d.toLocaleDateString([], { day:'2-digit', month:'short' }) + ' ' + t;
@@ -1613,10 +433,9 @@ function renderHistory(){
   else list.innerHTML = history.slice(0, 60).map(h => {
     const c = CATS[h.cat] || CATS.help;
     const ack = h.ackAt ? `<small>✅ Acknowledged after ${Math.max(1, Math.round((h.ackAt - h.ts) / 1000))}s</small>` : (h.cat === 'emergency' ? '<small>⚠️ Not acknowledged</small>' : '');
-    return `<li class="hi" style="--c:${c.color}"><span>${c.icon}</span><span class="m">${c.msg[S.lang]}${ack}</span><time>${fmtTime(h.ts)}</time></li>`;
+    return `<li class="hi" style="--c:${c.color}"><span style="font-size:22px;text-align:center">${c.icon}</span><span class="m">${c.msg[S.lang]}${ack}</span><time>${fmtTime(h.ts)}</time></li>`;
   }).join('');
-  const today = new Date().toDateString();
-  const counts = {};
+  const today = new Date().toDateString(), counts = {};
   history.filter(h => new Date(h.ts).toDateString() === today).forEach(h => counts[h.cat] = (counts[h.cat] || 0) + 1);
   const chips = Object.entries(counts).map(([k, n]) => `<span class="chip" style="color:${CATS[k].color}">${CATS[k].icon} ${n}</span>`).join('');
   $('#stats').innerHTML = chips ? chips + '<span class="chip">today</span>' : '<span class="chip">No alerts today</span>';
@@ -1627,9 +446,9 @@ function addHistory(cat){
   store.set('history', history); renderHistory();
   return e;
 }
-$('#clearBtn').onclick = () => { if (history.length && confirm('Clear all alert history?')) { history = []; store.set('history', history); renderHistory(); } };
+$('#clearBtn').onclick = () => { if (history.length && confirm('Clear all alert history?')){ history = []; store.set('history', history); renderHistory(); } };
 $('#exportBtn').onclick = () => {
-  if (!history.length) { toast('Nothing to export yet'); return; }
+  if (!history.length){ toast('Nothing to export yet'); return; }
   const rows = ['time,type,message,acknowledged_after_sec'].concat(history.map(h =>
     [new Date(h.ts).toISOString(), CATS[h.cat].name, '"' + CATS[h.cat].msg.en + '"', h.ackAt ? Math.round((h.ackAt - h.ts) / 1000) : ''].join(',')));
   const a = document.createElement('a');
@@ -1637,8 +456,10 @@ $('#exportBtn').onclick = () => {
   a.download = 'glove-alerts.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 };
 
+/* firing alerts */
 function fire(cat){
   const c = CATS[cat], entry = addHistory(cat);
+  if (soundOn) ensureCtx(); else $('#soundBtn').animate([{transform:'scale(1)'},{transform:'scale(1.04)'},{transform:'scale(1)'}],{duration:500,iterations:3});
   showCat(cat);
   if (cat === 'emergency'){
     if (emergency) return;
@@ -1661,6 +482,7 @@ $('#ackBtn').onclick = () => {
   buzz(0); showCat('normal'); renderHistory(); toast('Emergency acknowledged ✅');
 };
 
+/* demo + live data */
 const simBent = [false, false, false];
 const simCur = [cal[0].s, cal[1].s, cal[2].s];
 function simValues(){
@@ -1673,7 +495,7 @@ function simValues(){
 async function fetchLive(){
   const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 1500);
   try {
-    const r = await fetch('/status', { signal: ctrl.signal, cache: 'no-store' });
+    const r = await fetch(espUrl(), { signal: ctrl.signal, cache: 'no-store' });
     const j = await r.json();
     const v = [j.f1, j.f2, j.f3].map(Number);
     return v.some(isNaN) ? null : v;
@@ -1683,19 +505,20 @@ let connState = '';
 function setConn(st){
   if (st === connState) return; connState = st;
   const p = $('#pill');
-  p.className = 'pill' + (st === 'live' ? ' live' : st === 'off' ? ' off' : '');
+  p.className = 'pill' + (st === 'live' ? ' live' : st === 'off' ? ' off' : st === 'demo' ? ' demo' : '');
   $('#pillTxt').textContent = st === 'live' ? 'ESP32 connected' : st === 'off' ? 'ESP32 not reachable' : 'Demo mode';
 }
 
+/* calibration */
 let calib = null;
 function calibrate(kind){
-  if (S.mode !== 'live') { toast('Switch to Live ESP32 mode first'); return; }
+  if (S.mode !== 'live'){ toast('Switch to Live ESP32 mode first'); return; }
   toast(kind === 's' ? 'Keep all fingers STRAIGHT… starting in 3s' : 'BEND all fingers fully… starting in 3s');
   setTimeout(() => {
     calib = { samples: [] };
     setTimeout(() => {
       const sm = calib.samples; calib = null;
-      if (!sm.length) { toast('No data received. Check connection.'); return; }
+      if (!sm.length){ toast('No data received. Check connection.'); return; }
       F.forEach((_, i) => { cal[i][kind] = Math.round(sm.reduce((a, r) => a + r[i], 0) / sm.length); });
       store.set('cal', cal);
       const weak = cal.some(c => Math.abs(c.b - c.s) < 300);
@@ -1706,6 +529,7 @@ function calibrate(kind){
 $('#calS').onclick = () => calibrate('s');
 $('#calB').onclick = () => calibrate('b');
 
+/* gesture detection */
 const pctOf = (v, i) => { const { s, b } = cal[i]; return b === s ? 0 : (v - s) / (b - s); };
 let cand = 0, candSince = 0, lastFired = 0, busy = false;
 
@@ -1714,12 +538,12 @@ function handle(vals, now){
   const flags = vals.map((v, i) => pctOf(v, i) > S.thr / 100);
   vals.forEach((v, i) => {
     const el = $('#fg' + i);
-    el.querySelector('.fill').style.height = clamp(pctOf(v, i), 0, 1) * 100 + '%';
+    el.querySelector('.fill').style.width = clamp(pctOf(v, i), 0, 1) * 100 + '%';
     el.querySelector('.fval').textContent = Math.round(v);
     el.classList.toggle('bent', flags[i]);
   });
   const mask = flags.reduce((m, f, i) => m | (f ? 1 << i : 0), 0);
-  if (mask !== cand) { cand = mask; candSince = now; }
+  if (mask !== cand){ cand = mask; candSince = now; }
   const held = now - candSince;
 
   if (mask === 0){
@@ -1746,6 +570,9 @@ async function tick(){
   } finally { busy = false; }
 }
 
+document.addEventListener('pointerdown', () => autoSound(), { once:true });
+
+/* demo input */
 function paintSim(){ simF.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', simBent[i])); }
 simF.onclick = e => { const b = e.target.closest('button'); if (!b) return; autoSound(); simBent[+b.dataset.i] = !simBent[+b.dataset.i]; paintSim(); };
 presetsEl.onclick = e => {
@@ -1758,9 +585,11 @@ document.addEventListener('keydown', e => {
   if (e.key === '0'){ simBent.fill(false); paintSim(); }
 });
 
+/* mode, language, settings */
 function applyMode(){
   document.body.classList.toggle('live', S.mode === 'live');
   document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
+  $('#espShow').textContent = espUrl();
   if (S.mode === 'demo') setConn('demo');
 }
 $('#modeSeg').onclick = e => {
@@ -1768,1380 +597,33 @@ $('#modeSeg').onclick = e => {
   S.mode = b.dataset.mode; saveS(); connState = ''; applyMode();
   if (S.mode === 'live') setConn('off');
 };
+function paintLang(){ document.querySelectorAll('#langs button').forEach(b => b.classList.toggle('on', b.dataset.l === S.lang)); }
+function setLang(l, say){
+  S.lang = l; saveS(); paintLang();
+  showCat(emergency ? 'emergency' : shown); renderHistory(); renderLegend();
+  if (say) speak(CATS.normal.msg[S.lang]);
+}
+$('#langs').onclick = e => { const b = e.target.closest('button'); if (b) setLang(b.dataset.l, true); };
 
 const dlg = $('#settings');
 function syncSettings(){
-  $('#lang').value = S.lang; $('#thr').value = S.thr; $('#hold').value = S.hold;
+  $('#esp').value = S.esp; $('#lang').value = S.lang; $('#thr').value = S.thr; $('#hold').value = S.hold;
   $('#thrV').textContent = S.thr; $('#holdV').textContent = S.hold;
   $('#voice').checked = S.voice; $('#siren').checked = S.siren; $('#vibrate').checked = S.vibrate;
 }
 $('#openSettings').onclick = () => { syncSettings(); dlg.showModal(); };
 $('#closeSettings').onclick = () => dlg.close();
-$('#lang').onchange = e => { S.lang = e.target.value; saveS(); showCat(emergency ? 'emergency' : shown); renderHistory(); renderLegend(); speak(CATS.normal.msg[S.lang]); };
+$('#esp').onchange = e => { S.esp = e.target.value.trim() || '192.168.9.73'; saveS(); $('#espShow').textContent = espUrl(); connState = ''; toast('ESP32 address saved'); };
+$('#lang').onchange = e => setLang(e.target.value, true);
 $('#thr').oninput = e => { S.thr = +e.target.value; $('#thrV').textContent = S.thr; saveS(); placeTicks(); };
 $('#hold').oninput = e => { S.hold = +e.target.value; $('#holdV').textContent = S.hold; saveS(); };
 ['voice', 'siren', 'vibrate'].forEach(k => $('#' + k).onchange = e => { S[k] = e.target.checked; saveS(); });
+$('#testSound').onclick = () => { soundOn = true; soundTouched = true; ensureCtx(); loadVoices(); paintSound(); chime(); setTimeout(siren, 500); setTimeout(() => speak(CATS.water.msg[S.lang]), 1600); };
 $('#resetCal').onclick = () => { cal = F.map(() => ({ s:800, b:2600 })); store.set('cal', cal); toast('Calibration reset to defaults'); };
 
-renderLegend(); renderHistory(); placeTicks(); paintSim(); paintSound(); applyMode(); showCat('normal');
+applyMode(); paintLang(); renderLegend(); renderHistory(); placeTicks(); paintSim(); paintSound(); showCat('normal');
 if (S.mode === 'live') setConn('off');
-if ('speechSynthesis' in window) speechSynthesis.getVoices();
-setInterval(tick, 200);
-setInterval(tickEmergency, 1000);
-})();
-</script>
-</body>
-</html>
-खाली हिरव्या Commit changes... बटणावर क्लिक करा.
-
-पायरी २: GitHub Actions बिल्ड पूर्ण होऊ द्या
-तुमच्या रिपॉझिटरीमध्ये वर Actions नावाचा टॅब असेल, त्यावर क्लिक करा.
-
-तिथे एक पिवळा गोल फिरताना दिसेल (Pages build and deployment).
-
-१ मिनिटात तो हिरवा बरोबर (Green Checkmark ✅) होईल.
-
-तो हिरवा झाल्याशिवाय पेज उघडू नका, कारण तोपर्यंत जुनेच पेज लोड होत असते.
-
-पायरी ३: लिंक नवीन Incognito विंडोमध्ये उघडा
-ब्राऊझरमध्ये जुना कॅश (Cache) साठलेला असतो, त्यामुळे अपडेट्स लगेच दिसत नाहीत:
-
-तुमच्या ब्राऊझरमध्ये New Incognito Window (किंवा Private Window) उघडा.
-
-तुमची GitHub Pages ची लिंक तिथे पेस्ट करून एंटर दाबा:
-
-https://<username>.github.io/<repo-name>/
-
-आता तुम्हाला स्क्रीनवर तिन्ही बोटे (Live Flex Sensors), कार्ड्स, सिमुलेशन बटणे आणि जेस्चर गाइड पूर्णपणे दिसतील.
-
-mala gitfile aasch dist aahego to hub var fkt code
-
-GitHub var jar fkt code chya lines dist asel, tar tyacha artha tumhi repository madhli file view karat aahat, live website nahi.
-
-Ti file website sarkhi chalu karun baghnyasathi kholil steps follow kara:
-
-1. GitHub Pages chya Live Link var ja
-Repository madhe fakt code disto. Website baghnyasathi tichi vegali link aste:
-
-Tumchya repository madhe var Settings (⚙️) tab var click kara.
-
-Left side chya menu madhun Pages var click kara.
-
-Var ek box disel jyachyat ashi link asel:
-
-https://<tumche-username>.github.io/<repo-name>/
-
-"Visit site" ya button var click kara kinva ti link copy karun browser chya new tab madhe open kara.
-
-2. Jar ajun link aali nasel tar Pages on kara
-Jar Pages madhe "Visit site" dist nasel, tar:
-
-Build and deployment chya khali Branch ha option shodha.
-
-None chya jagi main select kara.
-
-Folder / (root) ch theva.
-
-Save button var click kara.
-
-1 te 2 minute thamba ani page refresh kara; tithe live website chi link generate hoil.
-
-3. File che naav check kara
-Website auto-load honyasathi file che naav barobar asne garjeche ahe:
-
-File che naav fakt index.html asave (sarva letters small asavi).
-
-Jar file che naav dusre asel (udaharanarth code.html kinva index.html.txt), tar GitHub Pages var site open hot nahi.
-
-Tip: Mobile var GitHub vapart asal tar browser menu madhun "Desktop site" on kara, mhanje Settings ani Pages che options sahaj distil.
-
-file che name kute aaste
-
-GitHub वर फाईलचे नाव शोधण्यासाठी आणि ते बदलण्यासाठी खालील जागा तपासा:
-
-१. Repository च्या मुख्य पेजवर (फायलींची यादी)
-तुमच्या Repository च्या मुख्य पानावर जा (ज्याला < > Code टॅब म्हणतात).
-
-तिथे निळ्या रंगाच्या फोल्डर्सच्या खाली फायलींची यादी दिसते.
-
-त्या यादीत डाव्या बाजूला फाईलचे नाव लिहिलेले असते (उदा. index.html किंवा README.md).
-
-२. फाईल उघडल्यानंतर (आत गेल्यावर)
-त्या फाईलवर क्लिक केल्यावर ती फाईल पूर्ण उघडेल.
-
-कोडच्या अगदी वर डाव्या बाजूला (Repo च्या नावाच्या पुढे) फाईलचे नाव ठळक अक्षरात दिसते.
-
-(उदा. your-repo-name / index.html)
-
-३. फाईलचे नाव कसे बदलायचे (Rename कसे करायचे?)
-जर फाईलचे नाव चुकीचे असेल आणि ते बदलून index.html करायचे असेल:
-
-फाईल उघडा.
-
-वर उजव्या बाजूला असणाऱ्या पेन्सिल आयकॉनवर (Edit this file) क्लिक करा.
-
-सर्वात वर एका बॉक्समध्ये फाईलचे नाव दिसेल.
-
-त्या बॉक्सवर क्लिक करून जुने नाव खोडा आणि तिथे टाईप करा:
-
-index.html
-
-खाली स्क्रोल करून हिरव्या "Commit changes..." बटणावर क्लिक करा.
-
-टीप: फाईलचे नाव बरोबर index.html (सर्व लहान अक्षरे - lowercase) असेल, तरच GitHub Pages ती थेट वेबसाइट म्हणून दाखवू शकते.
-
-aata tet README.md aahe
-
-तिथे README.md दिसत आहे याचा अर्थ तुमच्या रिपॉझिटरीमध्ये अजून index.html ही फाईल तयार झालेली नाही.
-
-वेबसाइट सुरू होण्यासाठी index.html फाईल असणे गरजेचे आहे. ती तयार करण्यासाठी खालील स्टेप्स करा:
-
-१. नवीन फाईल तयार करा
-रिपॉझिटरीच्या मुख्य पेजवर (< > Code टॅबवर) उजव्या बाजूला Add file असे बटण दिसेल, त्यावर क्लिक करा.
-
-मेनूमधून Create new file हा पर्याय निवडा.
-
-२. नाव आणि कोड टाका
-वर Name your file... असा एक रिकामा बॉक्स दिसेल, त्यात टाईप करा:
-
-Plaintext
-index.html
-(अक्षरे छोटी/lowercase च ठेवा)
-
-खाली असणाऱ्या मोठ्या रिकाम्या बॉक्समध्ये (Edit area) तुमचा Smart Glove Care Pro चा संपूर्ण HTML कोड पेस्ट करा.
-
-३. सेव्ह करा (Commit करा)
-स्क्रीनच्या खाली किंवा उजव्या कोपऱ्यात वर असणाऱ्या हिरव्या Commit changes... बटणावर क्लिक करा.
-
-समोर येणाऱ्या छोट्या पॉप-अप बॉक्समध्ये पुन्हा Commit changes वर क्लिक करा.
-
-आता रिपॉझिटरीच्या मुख्य पानावर तुम्हाला README.md सोबतच index.html ही फाईल सुद्धा दिसेल. यानंतर Settings -> Pages मध्ये जाऊन साईट उघडल्यास तुमची वेबसाइट थेट दिसेल.
-
-share kasi karaichi
-
-GitHub वरील प्रोजेक्ट किंवा वेबसाइट इतरांसोबत शेअर करण्यासाठी दोन मार्ग आहेत:
-
-पर्याय १: थेट चालू असणारी वेबसाइट (Live Website) शेअर करण्यासाठी
-लोकांना फक्त तुमचा Smart Glove Care Pro डॅशबोर्ड वापरायला किंवा बघायला द्यायचा असेल:
-
-तुमच्या Repository मध्ये वर Settings (⚙️) वर क्लिक करा.
-
-डाव्या बाजूच्या मेनूमधून Pages वर जा.
-
-सर्वात वर हिरव्या रंगात एक बॉक्स दिसेल:
-
-"Your site is live at..."
-
-तिथे दिलेली लिंक अशी असेल:
-
-https://<तुमचे-username>.github.io/<repo-चे-नाव>/
-
-ती लिंक कॉपी करून तुम्ही WhatsApp, Telegram किंवा ईमेलद्वारे कोणालाही पाठवू शकता. कोणीही त्या लिंकवर क्लिक करून थेट ॲप वापरू शकेल.
-
-पर्याय २: पूर्ण प्रोजेक्ट आणि कोड शेअर करण्यासाठी
-लोकांना तुमचा कोड बघायचा असेल किंवा प्रोजेक्ट डाऊनलोड करायचा असेल:
-
-तुमच्या Repository च्या मुख्य पानावर जा (जिथे < > Code टॅब असतो).
-
-उजव्या बाजूला असणाऱ्या हिरव्या <> Code बटणावर क्लिक करा.
-
-समोर एक छोटा बॉक्स उघडेल, त्यात एक URL दिसेल:
-
-[https://github.com/](https://github.com/)<तुमचे-username>/<repo-चे-नाव>.git
-
-किंवा थेट तुमच्या ब्राऊझरच्या ॲड्रेस बारमधील लिंक कॉपी करा:
-
-[https://github.com/](https://github.com/)<तुमचे-username>/<repo-चे-नाव>
-
-ही लिंक तुम्ही शेअर करू शकता.
-
-टीप: प्रोजेक्ट शेअर करण्यापूर्वी तुमची Repository Public असणे आवश्यक आहे. जर ती Private असेल, तर इतरांना ती लिंक उघडता येणार नाही. (पब्लिक करण्यासाठी: Settings -> खाली General मध्ये शेवटपर्यंत स्क्रोल करा -> 'Danger Zone' मध्ये 'Change repository visibility' -> 'Make public').
-
-aata ti file openjali mobile made next ky karu sang
-
-File mobile madhe open zali ahe, he khup chaan zale! Aata pudhchi process complete karun site live ani test karnyasathi kholil steps follow kara:
-
-1. App che features test kara (Demo Mode)
-Page mobile screen var vyavasthit chalat ahe ka te check kara:
-
-Var aslelya "🔇 Tap to enable Voice & Siren" button var tap kara, jyamule audio aani speech alerts activate hotil.   
-HTML
-
-Khali Simulate fingers section madhe ja.   
-HTML
-
-☝️ 1, ☝️ 2, kinva ☝️ 3 ya buttons var tap karun bagha. बोटे bend kelyanantat var Live flex sensors madhye levels halat ahet ka te check kara.   
-HTML
-+ 1
-
-Khali aslelya preset buttons var (udas. Water, Food, Emergency) click kara. Var status card madhe alert change hoto ka aani aawaj yeto ka te aikun bagha.   
-HTML
-+ 1
-
-2. He web app mobile chya Home Screen var add kara
-He app normal Android app sarkhe vaparnyasathi:
-
-Mobile chya Chrome browser madhe var ujavya bajula aslelya 3 dots (Menu) var tap kara.
-
-Tithe "Add to Home screen" (किंवा "Install app") ha option disel, tyavar click kara.
-
-Ek shortcut tumchya mobile chya home screen var save hoil. Tyavarun tumhi direct eka tap madhe he web app open karu shakta.
-
-3. ESP32 sobat connect karnyachi tayari (Live Mode)
-Jevha tumcha physical Smart Glove (ESP32) ready asel:
-
-Tumchya ESP32 module var WiFi Access Point chalu kara (jya che naav Smart_Glove_WiFi theva).   
-HTML
-
-Mobile chya WiFi settings madhe ja aani Smart_Glove_WiFi ya network sobat connect kara.   
-HTML
-
-Web page var Connection section madhe jaun 📡 Live ESP32 button select kara.   
-HTML
-
-Page live data sathi ESP32 kade connect hoil aani glove chya flex sensors chi actual readings screen var live distil!   
-HTML
-
-mala yek sang ty site va masssage yenar ka mi aajun eso32 made code upload kela nahi tu delevar karnar. pn mala te kas pahije sangto mi esp made code upload karnar finger chi momemt honar mg ty site la notification yenar aani aavaj pn yenar ty nusar mala gauid kar
-
-Tula jase pahije ahe, tashech hoil. Jevha patient glove madhe bot (finger) bend karel, tevha ESP32 to signal capture karel ani web page var live notification + aawaj (voice / siren) yenar.   
-HTML
-
-Pan ek mahattvachi gosht lakshat theva:
-Web page madhe code asa lihila ahe ki to /status ya endpoint varun sensor values ghenyasathi request karto. GitHub Pages he internet var ahe ani ESP32 tumchya local WiFi var asta. Mhanun he kaam karnyache 2 sophe marg ahet:   
-HTML
-
-Marg 1: Offline Local Hotspot (Sarvat Sopa & Best Padhhat)
-Yat internet chi garaj nasti. ESP32 swatah che WiFi Hotspot tayar karto.   
-HTML
-
-Kas Kaam Karta?
-
-ESP32 ek WiFi network create karto: Smart_Glove_WiFi.   
-HTML
-
-Mobile ya WiFi la connect karto.   
-HTML
-
-Browser madhe [http://192.168.4.1](http://192.168.4.1) open kele ki ha web interface ughadto.   
-HTML
-
-Finger bend keli ki ESP32 /status var JSON data pathavto ({"f1":1200,"f2":800,"f3":750}).   
-HTML
-
-Page te detect karun lagech screen var message update karta ani aawaj dete!   
-HTML
-
-Marg 2: GitHub Pages + Local ESP32 IP
-Jar tula GitHub Pages chi link ch wapraychi asel:
-
-ESP32 aani mobile ekoch gharachya WiFi (Router) sobat connect karave lagtil.
-
-HTML code madhe fetch('/status') chya jagi fetch('http://<ESP32-cha-IP>/status') asha badal karava lagel.
-
-Tula Aata Kay Karave Lagel (Step-by-Step):
-Audio Enable Kara:
-
-Website var jya mobile madhe page open ahe, tithe sarvat aadhi "🔇 Tap to enable Voice & Siren" var click kara.   
-HTML
-
-Browser chi security policy aslyamule ekda tap kelya shivay background aawaj vajnar nahi.   
-HTML
-
-Pins Wiring (HTML sobat match asavi):
-
-Finger 1: GPIO 34
-
-   
-HTML
-
-Finger 2: GPIO 35
-
-   
-HTML
-
-Finger 3: GPIO 32
-
-   
-HTML
-
-(ESP32 chya ADC pins var 10k ohm resistor sobat voltage divider circuit)
-
-ESP32 Code:
-
-ESP32 sathi C++ code lagel jo:
-
-Flex sensors chi analog value read karel.
-
-Web server chalavun /status ya route var te readings JSON format madhe send karel.   
-HTML
-
-Tula ESP32 sathi Offline Hotspot (Access Point) wara code pahije ki Gharachya WiFi (Router) sobat connect karnara code pahije? Te sang, mi tula ready code deu shakto.
-
-aankhi yek mi maj hotspot on karun esp la coonect karnar aani mobile made massage aala pahije
-
-Tumhi mobile cha Hotspot on karun ESP32 la connect karnar asal, tar he kaam karnyache don sarvat changle paryay ahet:
-
-Paryay 1: Telegram Bot द्वारे थेट Mobile Notification (Sarvat Best & Direct)
-Yat tula kontihi website ughadi thevaychi garaj padat nahi.
-
-Kas chalel: ESP32 tumchya mobile hotspot la connect hoil. Jashi patient chi finger bend hoil, tashi ESP32 direct Telegram API dware tumchya mobile var WhatsApp sarkhi notification + aawaj pathvel (udas. "Alert: I need water!").
-
-Fayda: Mobile screen lock asel tari sound va notification yete.
-
-Paryay 2: Web Page (Local Server) var Notification
-Jar tula HTML web dashboard ch vapraycha asel:
-
-Mobile cha Hotspot on kara.
-
-ESP32 tumchya hotspot chya WiFi la connect hoil.
-
-Mobile madhe Hotspot settings madhe jaun Connected Devices madhe ESP32 cha IP address bagha (udas. 192.168.43.50).
-
-Mobile browser madhe to IP open kara ([http://192.168.43.50](http://192.168.43.50)).
-
-Finger bend jhalyavar tithe dashboard var live reading disun notification va voice alert bajel.   
-HTML
-
-Step-by-Step Connection Guide:
-1. Hardware Connections (Circuit)
-Flex Sensor 1 
-→ GPIO 34 (sobat 10k ohm resistor ground la)   
-HTML
-
-Flex Sensor 2 
-→ GPIO 35 (sobat 10k ohm resistor ground la)   
-HTML
-
-Flex Sensor 3 
-→ GPIO 32 (sobat 10k ohm resistor ground la)   
-HTML
-
-2. ESP32 sathi C++ Code (Arduino IDE / ArduinoDroid)
-Ha code tumchya mobile hotspot sobat connect hoto ani HTML dashboard sathi data server chalu karto:
-
-C++
-#include <WiFi.h>
-#include <WebServer.h>
-
-// Tumchya Mobile Hotspot che details taka
-const char* ssid = "TUMCHYA_HOTSPOT_CHE_NAAV";
-const char* password = "HOTSPOT_PASSWORD";
-
-// Flex sensor pins
-const int pinF1 = 34;
-const int pinF2 = 35;
-const int pinF3 = 32;
-
-WebServer server(80);
-
-void handleStatus() {
-  int f1 = analogRead(pinF1);
-  int f2 = analogRead(pinF2);
-  int f3 = analogRead(pinF3);
-
-  // Web page la JSON data pathavne
-  String json = "{\"f1\":" + String(f1) + ",\"f2\":" + String(f2) + ",\"f3\":" + String(f3) + "}";
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.send(200, "application/json", json);
-}
-
-void setup() {
-  Serial.begin(115200);
-
-  analogReadResolution(12);
-
-  // Hotspot sobat connection
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("\nWiFi Connected!");
-  Serial.print("ESP32 cha IP Address: ");
-  Serial.println(WiFi.localIP());
-
-  // Status route setup
-  server.on("/status", handleStatus);
-  server.begin();
-}
-
-void loop() {
-  server.handleClient();
-}
-3. Mobile Web Page var kay karayche:
-ESP32 flash kelyanantat mobile hotspot madhe connect hoil.
-
-Hotspot settings madhun ESP32 cha IP milva.
-
-Web app madhe "📡 Live ESP32" select kara aani var "🔇 Tap to enable Voice & Siren" var click kara.   
-HTML
-
-Glove bend jhalyavar web page var alert aani aawaj aiku yeil.   
-HTML
-
-Tula Telegram Notification chi padhhat havi ahe ki ya Web Page varach sound/notification pahije?
-
-mi aadi telegram ch kel aaahe aata mala ty site var massage aala pahije
-
-Site var direct message aani aawaj yenyasathi ESP32 aani web page eka sobat communicate hone garjeche ahe.   
-HTML
-
-GitHub Pages chi website internet var chalte, mhanun tila tumchya mobile hotspot madhe connect aslelya ESP32 cha data milnyasathi kholil pramane setup karave lagel.
-
-Step 1: ESP32 cha Code (Hotspot Connect + JSON Data)
-Ha code tumchya ESP32 madhe upload kara. Ha code flex sensors chi value read karel aani web page la /status route var provide karel.   
-HTML
-
-C++
-#include <WiFi.h>
-#include <WebServer.h>
-
-// Tumchya Mobile Hotspot che details
-const char* ssid = "TUMCHYA_HOTSPOT_CHE_NAAV";
-const char* password = "HOTSPOT_PASSWORD";
-
-// Flex sensor pins (HTML madhe heech pins ahet)
-const int pinF1 = 34;
-const int pinF2 = 35;
-const int pinF3 = 32;
-
-WebServer server(80);
-
-void handleStatus() {
-  int f1 = analogRead(pinF1);
-  int f2 = analogRead(pinF2);
-  int f3 = analogRead(pinF3);
-
-  // Web page sathi JSON data
-  String json = "{\"f1\":" + String(f1) + ",\"f2\":" + String(f2) + ",\"f3\":" + String(f3) + "}";
-  
-  // CORS allow karne (jyamule website block honar nahi)
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.send(200, "application/json", json);
-}
-
-void setup() {
-  Serial.begin(115200);
-  analogReadResolution(12);
-
-  // Hotspot connect karne
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("\nWiFi Connected!");
-  Serial.print("ESP32 cha IP: ");
-  Serial.println(WiFi.localIP());
-
-  server.on("/status", handleStatus);
-  server.begin();
-}
-
-void loop() {
-  server.handleClient();
-}
-Step 2: ESP32 cha IP Address shodha
-Mobile cha Hotspot on kara.
-
-ESP32 la power dya; to hotspot sobat connect hoil.
-
-Mobile madhe Settings 
-→ Portable Hotspot 
-→ Connected Devices madhe ja.
-
-Tithe ESP32 cha IP address disel (udas. 192.168.43.125). Ha IP note karun theva.
-
-Step 3: Web Code madhe Chota Badlaav (IP Add Karne)
-Tumhi website GitHub Pages varun ughadat aslyamule, page la ESP32 cha direct IP sangava lagel.
-
-GitHub var tumchi index.html file open kara aani Edit (पेन्सिल icon) var click kara.
-
-Code madhe line shodha:
-
-JavaScript
-const r = await fetch('/status', { signal: ctrl.signal, cache: 'no-store' });
-   
-HTML
-
-3. Tya jagi tumchya ESP32 cha IP taka:
-
-JavaScript
-const r = await fetch('http://192.168.43.125/status', { signal: ctrl.signal, cache: 'no-store' });
-(Tithe 192.168.43.125 chya jagi tumchya ESP32 cha khara IP taka).
-4. Khali Commit changes var click kara.
-
-Step 4: Testing aani Aawaj (Final Run)
-Mobile madhe browser var GitHub Pages chi link open kara.
-
-Sarvat aadhi var aslelya "🔇 Tap to enable Voice & Siren" button var click kara. (Browser policy mule ekda tap kelya shivay audio aani voice chalu hot nahi).   
-HTML
-+ 1
-
-Connection box madhe "📡 Live ESP32" select kara.   
-HTML
-
-Glove madhil bot bend kara:
-
-Screen var live value update hoil.   
-HTML
-
-Tithe message distil (udas. Water, Food, Emergency).   
-HTML
-
-Mobile madhun voice announcement aani chime sound aiku yeil.   
-HTML
-
-esp sti deleal code to final code aage
-
-हो, हाच तुमचा ESP32 चा फायनल कोड आहे. यात तुमच्या HTML वेब ॲपला लागणारा सर्व डेटा व्यवस्थित फॉरमॅट करून दिला आहे:   
-HTML
-
-ESP32 चा फायनल कोड (Arduino IDE / ArduinoDroid साठी)
-C++
-#include <WiFi.h>
-#include <WebServer.h>
-
-// ==========================================
-// १. तुमच्या मोबाईल हॉटस्पॉटचे नाव आणि पासवर्ड
-// ==========================================
-const char* ssid = "TUMCHYA_HOTSPOT_CHE_NAAV";        // तुमच्या Hotspot चे नाव
-const char* password = "HOTSPOT_PASSWORD";            // तुमच्या Hotspot चा पासवर्ड
-
-// ==========================================
-// २. सेन्सर पिन्स (तुमच्या HTML फाईलनुसार सेट)
-// ==========================================
-const int pinF1 = 34; // Finger 1 (Flex Sensor 1)
-const int pinF2 = 35; // Finger 2 (Flex Sensor 2)
-const int pinF3 = 32; // Finger 3 (Flex Sensor 3)
-
-WebServer server(80);
-
-// वेब ॲपला JSON डेटा पाठवणारे फंक्शन
-void handleStatus() {
-  int f1 = analogRead(pinF1);
-  int f2 = analogRead(pinF2);
-  int f3 = analogRead(pinF3);
-
-  // HTML ला लागणारा JSON फॉरमॅट: {"f1": ..., "f2": ..., "f3": ...}
-  String json = "{\"f1\":" + String(f1) + ",\"f2\":" + String(f2) + ",\"f3\":" + String(f3) + "}";
-  
-  // CORS Headers (ब्राऊझर ब्लॉक करू नये म्हणून)
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.sendHeader("Access-Control-Allow-Methods", "GET");
-  server.send(200, "application/json", json);
-}
-
-void setup() {
-  Serial.begin(115200);
-  delay(1000);
-
-  // ADC Resolution (0 ते 4095)
-  analogReadResolution(12);
-
-  Serial.println("\n--- Smart Glove Care Starting ---");
-  Serial.print("Connecting to Hotspot: ");
-  Serial.println(ssid);
-
-  // वायफाय हॉटस्पॉटला कनेक्ट करणे
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("\nWiFi Connected Successfully!");
-  Serial.print("ESP32 चा IP Address: ");
-  Serial.println(WiFi.localIP());
-
-  // /status वरून वेब पेज डेटा घेईल
-  server.on("/status", handleStatus);
-  server.begin();
-  Serial.println("Web Server Started! Ready for requests.");
-}
-
-void loop() {
-  server.handleClient();
-}
-कोड अपलोड करताना लक्षात ठेवावयाच्या गोष्टी:
-कोडमधील TUMCHYA_HOTSPOT_CHE_NAAV आणि HOTSPOT_PASSWORD च्या जागी तुमच्या मोबाईल हॉटस्पॉटची माहिती टाका.
-
-ESP32 मध्ये कोड अपलोड केल्यानंतर Serial Monitor (115200 baud) उघडा, तिथे तुम्हाला ESP32 चा IP ॲड्रेस दिसेल (उदा. 192.168.43.XX).
-
-तो IP ॲड्रेस तुमच्या GitHub वरील index.html मध्ये fetch('http://<ESP32-IP>/status') या जागी टाकला की Glove आणि वेबसाइट एकमेकांशी थेट कनेक्ट होतील.   
-HTML
-
-upload jala
-
-खूप छान! आता दोन्ही गोष्टी एकमेकांशी कनेक्ट करून टेस्ट करण्यासाठी खालील शेवटच्या पायऱ्या पूर्ण करा:
-
-१. ESP32 चा IP ॲड्रेस मिळवा
-मोबाईलचा Personal Hotspot चालू ठेवा.
-
-ESP32 रीस्टार्ट (EN/RST बटण दाबा) किंवा चालू करा.
-
-तो हॉटस्पॉटशी कनेक्ट झाल्यावर त्याचा IP कसा बघायचा:
-
-पद्धत अ (मोबाईलमधून): मोबाईलच्या Settings 
-→ Portable Hotspot 
-→ Connected Devices मध्ये जा; तिथे ESP32 चा IP दिसेल (उदा. 192.168.43.50).
-
-पद्धत ब (Arduino मधून): Serial Monitor (Baud rate 115200) उघडा; तिथे ESP32 चा IP Address: 192.168.43.XX अशी ओळ दिसेल.
-
-२. तो IP तुमच्या index.html मध्ये टाका
-GitHub वरील वेबसाईटला ESP32 चा अचूक पत्ता माहित असणे आवश्यक आहे:
-
-GitHub वर जाऊन index.html फाईल उघडा आणि पेन्सिलच्या चिन्हावर (Edit) क्लिक करा.
-
-खालील ओळ शोधा:
-
-JavaScript
-const r = await fetch('/status', { signal: ctrl.signal, cache: 'no-store' });
-   
-HTML
-
-3. तिथे /status च्या जागी तुमच्या ESP32 चा IP टाका (उदा. जर IP 192.168.43.50 असेल तर):
-
-JavaScript
-const r = await fetch('http://192.168.43.50/status', { signal: ctrl.signal, cache: 'no-store' });
-खाली Commit changes वर क्लिक करा आणि १ मिनिट थांबा.
-
-३. फायनल टेस्टिंग (Run करा)
-मोबाईलमध्ये तुमची GitHub Pages ची लिंक उघडा.
-
-वर असणाऱ्या "🔇 Tap to enable Voice & Siren" बटणावर नक्की टॅप करा (हिरवे 🔊 Voice & Siren ON झाले पाहिजे).   
-HTML
-
-Connection बॉक्समध्ये "📡 Live ESP32" निवडा.   
-HTML
-
-वर "ESP32 connected" असा हिरवा सिग्नल दिसेल.   
-HTML
-
-आता ग्लोव्हचे बोट वाकवून (Bend करून) धरा:
-
-स्क्रीनवर व्हॅल्यू बदलेल.   
-HTML
-
-मध्यभागी मेसेज येईल (उदा. Water, Help किंवा Emergency).   
-HTML
-
-मोबाईलमधून थेट आवाज (Voice Announcement) येईल!   
-HTML
-
-बोट वाकवल्यावर स्क्रीनवर रिस्पॉन्स आणि आवाज येतोय का ते तपासून सांगा!
-
-updated file puna mobile la send keli pahije
-
-तुम्ही ही फाईल कशी वापरत आहात यावर ते अवलंबून आहे:
-
-पर्याय १: तुम्ही मोबाईलवर GitHub Pages ची लिंक उघडत असाल तर (सर्वात सोपा मार्ग)
-👉 मोबाईलला फाईल पाठवण्याची अजिबात गरज नाही!
-
-तुम्ही फक्त तुमच्या लॅपटॉपवरून/ब्राऊझरमधून GitHub वर जाऊन index.html फाईलमध्ये तो बदल सेव्ह (Commit) करा.
-
-त्यानंतर मोबाईलमध्ये तुमच्या ब्राऊझरमधील GitHub Pages ची लिंक फक्त रिफ्रेश (Reload) करा.
-
-नवीन बदल थेट मोबाईलवर लागू होतील.
-
-पर्याय २: तुम्ही मोबाईलच्या स्टोरेजमधील थेट फाईल (Offline File) ओपन करत असाल तर
-👉 हो, मग तुम्हाला अपडेट केलेली नवीन फाईल मोबाईलवर पाठवावी लागेल.
-
-कारण जुन्या फाईलमध्ये जुनाच कोड असेल.
-
-नवीन फाईल मोबाईलवर घेऊन ती ब्राऊझरमध्ये (Chrome मध्ये) पुन्हा ओपन करावी लागेल.
-
-तुम्हाला फाईल अपडेट करून नवीन डाऊनलोड करायला हवी आहे का?
-जर तुम्हाला नवीन अपडेटेड फाईल डाऊनलोड करायची असेल, तर तुमच्या ESP32 चा आलेला IP ॲड्रेस (उदा. 192.168.43.XX) मला सांगा; मी थेट तो IP कोडमध्ये टाकून नवीन index.html फाईल तयार करून देतो, जी तुम्ही डाऊनलोड करून वापरू शकता!
-
-esp hotspot la connect jal aahe pn file la hot nahi
-
-ESP32 hotspot la connect zalyavahi jar web page sobat connect hot nasel, tar hyache mukhya kaaran HTTPS (Mixed Content) kinva IP address mismatch asu shakto.
-
-He problem solve karnyacha sarvat sopi ani 100% chalnari step-by-step padhhat khali dili ahe:
-
-Kaaran: GitHub Pages he https:// aste ani ESP32 http:// asta
-Mobile browser security (Mixed Content blocker) mule GitHub chi secure link (https://) tumchya local insecure ESP32 IP la ([http://192.168...](http://192.168...)) block karte. Tyamule page var "ESP32 not reachable" ch dist rahto.   
-HTML
-
-Solution 1: ESP32 cha IP direct Browser madhe check kara (Test karne)
-Mobile madhe Chrome browser ughda.
-
-Direct address bar madhe type kara:
-
-http://<TUMCHA-ESP32-IP>/status
-
-(Udaharanarth: [http://192.168.43.50/status](http://192.168.43.50/status))
-
-Enter dablyavar jar screen var json data disla:
-
-{"f1":1500,"f2":1200,"f3":1100}
-
-Tar ya cha artha ESP32 ekdam barobar kaam kartoy!
-
-Solution 2: Mixed Content Browser madhe Allow kara (GitHub link sathi)
-Jar tumhi GitHub Pages chi link vaparat asal:
-
-Chrome browser madhe GitHub chi link open kara.
-
-URL bar chya agdi davyabajula ek Tune / Settings / Padlock icon disel, tyavar tap kara.
-
-Site settings (साइट सेटिंग्ज) madhe ja.
-
-Tithe Insecure content ha option shodha aani tyala Block varun Allow kara.
-
-Mag page punha reload (refresh) kara.
-
-Solution 3: Full Offline Mode (Sarvat Best & Fast)
-Jar GitHub link block karat asel, tar sarvat changla marg mhanje tumchi index.html file mobile chya file manager madhun direct Chrome browser madhe open kara (Local file URL: file:///.../index.html).
-Local file madhe HTTPS cha issue yet nahi ani to direct ESP32 cha data read karu shakto!   
-HTML
-
-Tumcha ESP32 cha kharokhar konta IP address aala ahe, to sangashil ka? (Udaharanarth 192.168.43.xx), mhanje mi tula direct settings check karun deto.
-
-192.168.9.73
-
-तुमच्या ESP32 चा IP 192.168.9.73 थेट कोडमध्ये सेट करून मी index.html फाईल तयार केली आहे.
-
-HTML icon
-index
- HTML 
-आधी ESP32 डेटा देत आहे का ते तपासा (१ सेकंदाची टेस्ट)
-मोबाईलच्या Chrome ब्राऊझरमध्ये एक नवीन टॅब उघडा आणि सर्च बारमध्ये थेट टाईप करून एंटर दाबा:
-
-👉 [http://192.168.9.73/status](http://192.168.9.73/status)
-
-जर स्क्रीनवर असा डेटा दिसला: {"f1":..., "f2":..., "f3":...}, तर ESP32 १००% बरोबर चालू आहे.
-
-आता फाईल कशी वापरायची? (२ सोपे पर्याय)
-पर्याय १: सर्वात सोपा — ही डाऊनलोड केलेली फाईल थेट मोबाईलमध्ये उघडा (Offline)
-या पद्धतीत GitHub चा Mixed Content / HTTPS ब्लॉक करण्याचा त्रास होत नाही:
-
-वर दिलेल्या फाईल टॅगवरून index.html डाऊनलोड करा.
-
-ती फाईल तुमच्या मोबाईलच्या File Manager / Downloads मध्ये जाईल.
-
-त्या फाईलवर टॅप करून ती Chrome Browser मध्ये उघडा.
-
-वर "🔇 Tap to enable Voice & Siren" वर टॅप करा.   
-HTML
-
-स्क्रीनवर लगेच "ESP32 connected" असा हिरवा दिवा लागेल आणि ग्लोव्हचे बोट वाकवताच आवाज येईल!   
-HTML
-+ 1
-
-पर्याय २: GitHub Pages वर अपडेट करायचे असल्यास
-जर तुम्हाला हीच फाईल GitHub वर ठेवायची असेल:
-
-GitHub वरील तुमच्या रिपॉझिटरीमधील index.html फाईल उघडा आणि पेन्सिल चिन्हावर (Edit) क्लिक करा.
-
-जुना सर्व कोड खोडून टाका आणि या नवीन डाऊनलोड केलेल्या फाईलचा संपूर्ण कोड तिथे पेस्ट करून Commit changes करा.
-
-महत्त्वाची टीप: GitHub Pages ची लिंक उघडल्यावर Chrome मधील Site Settings मध्ये जाऊन Insecure content हा पर्याय Allow करावा लागेल, कारण GitHub https:// असते आणि ESP32 http:// असतो.
-
-पहिले पर्याय १ नुसार थेट फाईल मोबाईल ब्राऊझरमध्ये उघडून टेस्ट करून बघा.
-
-
-ha option nahi disla
-
-
-Make money online with games, apps & more.
-×
-मोबाईल Chrome मध्ये काही व्हर्जन्समध्ये "Insecure content" चा पर्याय थेट Site Settings मध्ये लपवलेला असतो. तो कसा शोधायचा किंवा या समस्येवर इतर सोपे मार्ग कोणते आहेत ते खालीलप्रमाणे:
-
-१. मोबाईल Chrome मध्ये हा पर्याय कसा शोधायचा?
-तुमच्या GitHub Pages ची लिंक Chrome मध्ये उघडा.
-
-वर ॲड्रेस बारमध्ये (जिथे लिंक लिहिलेली असते) डाव्या बाजूला Tune / Sliders (चिमट्यासारखे किंवा पॅडलॉक 🔒) चे आयकॉन दिसेल, त्यावर टॅप करा.
-
-तिथे खाली Site settings (साइट सेटिंग्ज) वर क्लिक करा.
-
-जर तुम्हाला तिथे थेट "Insecure content" दिसले नाही, तर खाली Permissions च्या यादीत शेवटी स्क्रोल करा:
-
-काही फोन्समध्ये तिथे "Sound", "Pop-ups" च्या खाली "Insecure content" किंवा "Unsafe content" असते.
-
-त्यावर टॅप करून Allow (परवानगी द्या) निवडा.
-
-२. सर्वात सोपा आणि खात्रीशीर पर्याय (कोणतीही सेटिंग न बदलता)
-जर Chrome सेटिंगमध्ये तो पर्याय सापडत नसेल, तर तुम्हाला या त्रासातून जाण्याची अजिबात गरज नाही. खालील दोन सोप्या पद्धतींपैकी एक वापरा:
-
-पद्धत अ: डाऊनलोड केलेली फाईल थेट मोबाईलमध्ये उघडा (Offline File)
-मी वर दिलेली index.html फाईल तुम्ही थेट मोबाईलमध्ये उघडू शकता:
-
-तुमच्या मोबाईलच्या File Manager (किंवा My Files) ॲपमध्ये जा.
-
-Downloads फोल्डरमध्ये जा आणि डाऊनलोड केलेल्या index.html फाईलवर क्लिक करा.
-
-Open with Chrome निवडा.
-
-ही फाईल file:///... ने सुरू होते, त्यामुळे ब्राउझरचा https चा नियम इथे लागत नाही आणि ती थेट तुमच्या ESP32 शी (192.168.9.73) जोडली जाईल.   
-HTML
-
-पद्धत ब: पूर्ण वेबपेज ESP32 वरूनच चालवणे (Best Method)
-GitHub Pages वर न जाता, तुमचा ESP32 स्वतःच हे पूर्ण वेबपेज मोबाईलवर दाखवू शकतो.
-
-यासाठी तुम्हाला इंटरनेटचीही गरज नसते.
-
-फक्त मोबाईल हॉटस्पॉटशी कनेक्ट करून मोबाईल ब्राऊझरमध्ये थेट [http://192.168.9.73](http://192.168.9.73) टाकल्यास वेब ॲप उघडेल.
-
-पहिले पद्धत अ (फाइल मॅनेजरमधून फाईल Chrome मध्ये ओपन करून) चालू होतेय का ते तपासून बघा.
-
-
-
-
-
-Gemini is AI and can make mistakes.
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#070d1a">
-<title>Smart Glove Care Pro</title>
-<style>
-  :root{--bg:#070d1a;--surface:rgba(255,255,255,.045);--surface2:rgba(255,255,255,.08);--line:rgba(255,255,255,.09);--text:#eef3fb;--sub:#8fa0b8;--accent:#38e1c6;--ok:#34d399;--warn:#fbbf24;--bad:#f43f5e;--c:#34d399;--radius:20px}
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{-webkit-text-size-adjust:100%}
-  body{font-family:ui-rounded,"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:max(14px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom));overflow-x:hidden}
-  .bg{position:fixed;inset:0;z-index:-2;background:radial-gradient(60% 50% at 12% 0%,rgba(56,225,198,.16),transparent 70%),radial-gradient(50% 45% at 100% 20%,rgba(96,165,250,.14),transparent 70%),radial-gradient(60% 50% at 50% 110%,rgba(167,139,250,.12),transparent 70%),var(--bg)}
-  .alarm-overlay{position:fixed;inset:0;z-index:50;pointer-events:none;opacity:0;transition:opacity .3s}
-  body.alarm .alarm-overlay{opacity:1;animation:flash .8s infinite alternate;box-shadow:inset 0 0 0 6px var(--bad),inset 0 0 120px rgba(244,63,94,.55)}
-  @keyframes flash{from{background:rgba(244,63,94,.05)}to{background:rgba(244,63,94,.22)}}
-  .app{max-width:1020px;margin:0 auto;display:grid;gap:16px;grid-template-columns:1fr}
-  @media(min-width:880px){.app{grid-template-columns:1.1fr .9fr;align-items:start}header,.top-bars{grid-column:1/-1}}
-  .col{display:grid;gap:16px}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:12px}
-  .logo{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.5rem;background:linear-gradient(135deg,rgba(56,225,198,.3),rgba(96,165,250,.3));border:1px solid var(--line)}
-  .brand h1{font-size:1.2rem;font-weight:800;letter-spacing:-.01em}
-  .brand p{font-size:.78rem;color:var(--sub)}
-  .hdr-r{display:flex;align-items:center;gap:8px}
-  .pill{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:99px;font-size:.78rem;font-weight:700;background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.25)}
-  .pill i{width:8px;height:8px;border-radius:50%;background:currentColor;animation:blink 1.6s infinite}
-  .pill.live{background:rgba(52,211,153,.12);color:var(--ok);border-color:rgba(52,211,153,.3)}
-  .pill.off{background:rgba(244,63,94,.12);color:var(--bad);border-color:rgba(244,63,94,.3)}
-  @keyframes blink{50%{opacity:.25}}
-  .icon-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:1.1rem;cursor:pointer}
-  .icon-btn:hover{background:var(--surface2)}
-  .sound{width:100%;padding:13px;border-radius:14px;border:1px solid var(--line);font-weight:700;font-size:.9rem;cursor:pointer;color:#fff;background:linear-gradient(90deg,#2563eb,#7c3aed);transition:.2s}
-  .sound.on{background:var(--surface);color:var(--ok);border-color:rgba(52,211,153,.4)}
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;backdrop-filter:blur(10px)}
-  .card h2{font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--sub);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .row-btns{display:flex;gap:6px;flex-wrap:wrap}
-  .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:.8rem;font-weight:700;cursor:pointer;transition:.15s;text-transform:none;letter-spacing:0}
-  .btn:hover{background:var(--surface2);border-color:rgba(255,255,255,.2)}
-  .btn.danger{color:#fda4af}
-  .status{--c:#34d399;text-align:center;padding:30px 20px 22px;position:relative;overflow:hidden;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--c) 26%,transparent),transparent 72%),var(--surface);border-color:color-mix(in srgb,var(--c) 55%,transparent);transition:border-color .4s,background .4s}
-  .status .ico{width:104px;height:104px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font-size:3.4rem;position:relative;background:color-mix(in srgb,var(--c) 18%,transparent);border:1px solid color-mix(in srgb,var(--c) 50%,transparent)}
-  .status .ico::after{content:"";position:absolute;inset:-10px;border-radius:50%;border:2px solid var(--c);opacity:0;animation:ring 2.2s infinite}
-  body:not(.idle) .status .ico::after{opacity:.5}
-  @keyframes ring{0%{transform:scale(.85);opacity:.6}100%{transform:scale(1.25);opacity:0}}
-  .status h3{font-size:1.65rem;font-weight:800;line-height:1.2;margin-bottom:6px;letter-spacing:-.01em}
-  .status p{font-size:.9rem;color:var(--sub)}
-  .hold{height:5px;border-radius:5px;background:rgba(255,255,255,.07);margin:18px auto 0;max-width:260px;overflow:hidden}
-  .hold div{height:100%;width:0;background:var(--c);transition:width .12s linear}
-  .ack{display:none;margin:16px auto 0;padding:13px 26px;border:none;border-radius:14px;background:#fff;color:#7f1d1d;font-size:1rem;font-weight:800;cursor:pointer}
-  .status.is-emergency{animation:shake 1s infinite}
-  .status.is-emergency .ack{display:inline-block}
-  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
-  .fingers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  .finger{text-align:center;padding:12px 6px;border-radius:16px;background:rgba(0,0,0,.2);border:1px solid var(--line);transition:.2s}
-  .finger.bent{border-color:var(--warn);background:rgba(251,191,36,.08)}
-  .cap{position:relative;width:46px;height:130px;margin:0 auto 10px;border-radius:24px;background:rgba(255,255,255,.06);overflow:hidden;border:1px solid var(--line)}
-  .fill{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(0deg,#38e1c6,#60a5fa);transition:height .2s,background .2s}
-  .finger.bent .fill{background:linear-gradient(0deg,#fbbf24,#fb923c)}
-  .tick{position:absolute;left:0;right:0;height:2px;background:#fff;opacity:.75}
-  .fname{font-weight:800;font-size:.86rem}
-  .fpin{font-size:.7rem;color:var(--sub)}
-  .fval{margin-top:4px;font-size:.9rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent)}
-  .finger.bent .fval{color:var(--warn)}
-  .hint{font-size:.74rem;color:var(--sub);margin-top:12px;line-height:1.5}
-  .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line);margin-bottom:12px}
-  .seg button{padding:9px;border:none;border-radius:9px;background:transparent;color:var(--sub);font-weight:700;font-size:.85rem;cursor:pointer}
-  .seg button.on{background:var(--surface2);color:var(--text)}
-  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
-  .field label{font-size:.78rem;color:var(--sub);font-weight:600}
-  select{width:100%;padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);font-size:.92rem}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .live-only{display:none}
-  body.live .live-only{display:block}
-  body.live .demo-only{display:none}
-  .sim-f{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-  .sim-f button{padding:14px 6px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-weight:800;font-size:.9rem;cursor:pointer;transition:.15s}
-  .sim-f button.on{background:rgba(251,191,36,.15);border-color:var(--warn);color:var(--warn)}
-  .presets{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-  .presets button{padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--text);font-weight:700;font-size:.82rem;cursor:pointer;text-align:left}
-  .presets button:hover{border-color:var(--accent)}
-  .legend{display:grid;gap:8px}
-  .lg{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:13px;background:rgba(0,0,0,.2);border-left:4px solid var(--c)}
-  .lg .e{font-size:1.3rem}
-  .lg .t{flex:1;font-weight:700;font-size:.9rem}
-  .dots{display:flex;gap:5px}
-  .dots i{width:11px;height:11px;border-radius:50%;border:2px solid var(--sub)}
-  .dots i.f{background:var(--c);border-color:var(--c)}
-  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-  .chip{padding:5px 10px;border-radius:99px;font-size:.78rem;font-weight:700;background:rgba(0,0,0,.25);border:1px solid var(--line)}
-  .hist{list-style:none;max-height:300px;overflow-y:auto;display:grid;gap:8px;padding-right:2px}
-  .hi{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.22);border-left:4px solid var(--c);font-size:.88rem}
-  .hi .m{flex:1;font-weight:700}
-  .hi small{display:block;color:var(--sub);font-weight:500;font-size:.72rem;margin-top:2px}
-  .hi time{font-size:.74rem;color:var(--sub);white-space:nowrap}
-  .empty{text-align:center;color:var(--sub);font-size:.85rem;padding:18px}
-  dialog{margin:auto;border:1px solid var(--line);border-radius:20px;background:#0e1626;color:var(--text);padding:22px;width:min(420px,92vw)}
-  dialog::backdrop{background:rgba(0,0,0,.6);backdrop-filter:blur(3px)}
-  dialog h2{font-size:1.1rem;margin-bottom:16px}
-  .sw{display:flex;align-items:center;justify-content:space-between;padding:9px 0;font-size:.9rem;font-weight:600}
-  .sw input{width:20px;height:20px;accent-color:var(--accent)}
-  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,30px);opacity:0;background:#fff;color:#0b1220;padding:11px 18px;border-radius:12px;font-weight:700;font-size:.86rem;z-index:99;transition:.3s;pointer-events:none;max-width:90vw;text-align:center}
-  .toast.show{opacity:1;transform:translate(-50%,0)}
-</style>
-</head>
-<body class="idle">
-<div class="bg"></div>
-<div class="alarm-overlay"></div>
-
-<main class="app">
-  <header>
-    <div class="brand">
-      <div class="logo">🧤</div>
-      <div><h1>Smart Glove Care</h1><p>Patient assistive alert system · offline</p></div>
-    </div>
-    <div class="hdr-r">
-      <div class="pill" id="pill"><i></i><span id="pillTxt">Connecting...</span></div>
-      <button class="icon-btn" id="openSettings" title="Settings">⚙️</button>
-    </div>
-  </header>
-
-  <div class="top-bars">
-    <button class="sound" id="soundBtn">🔇 Tap to enable Voice &amp; Siren</button>
-  </div>
-
-  <div class="col">
-    <section class="card status" id="status">
-      <div class="ico" id="stIcon">😊</div>
-      <h3 id="stTitle">Patient is comfortable.</h3>
-      <p id="stSub">All fingers straight. Monitoring…</p>
-      <div class="hold"><div id="holdBar"></div></div>
-      <button class="ack" id="ackBtn">✅ I'm coming — Acknowledge</button>
-    </section>
-
-    <section class="card">
-      <h2>
-        <span>Live flex sensors</span>
-        <span class="row-btns live-only">
-          <button class="btn" id="calS">Calibrate straight</button>
-          <button class="btn" id="calB">Calibrate bent</button>
-        </span>
-      </h2>
-      <div class="fingers" id="fingers"></div>
-      <p class="hint">White line = trigger point. A gesture fires only after it is held steady, so accidental twitches are ignored.</p>
-    </section>
-
-    <section class="card">
-      <h2>Connection</h2>
-      <div class="seg" id="modeSeg">
-        <button data-mode="demo">🎮 Demo</button>
-        <button data-mode="live" class="on">📡 Live ESP32</button>
-      </div>
-      <div class="live-only">
-        <p class="hint" style="margin-top:0">Connected to ESP32 at: <b>http://192.168.9.73/status</b></p>
-      </div>
-      <div class="demo-only">
-        <h2 style="margin-top:4px">Simulate fingers</h2>
-        <div class="sim-f" id="simF"></div>
-        <div class="presets" id="presets"></div>
-        <p class="hint">Keyboard: press <b>1</b> <b>2</b> <b>3</b> to bend fingers, <b>0</b> to straighten all.</p>
-      </div>
-    </section>
-  </div>
-
-  <div class="col">
-    <section class="card">
-      <h2>Gesture guide (7 Combinations)</h2>
-      <div class="legend" id="legend"></div>
-    </section>
-
-    <section class="card">
-      <h2>
-        <span>Alert history</span>
-        <span class="row-btns">
-          <button class="btn" id="exportBtn">Export CSV</button>
-          <button class="btn danger" id="clearBtn">Clear</button>
-        </span>
-      </h2>
-      <div class="chips" id="stats"></div>
-      <ul class="hist" id="hist"></ul>
-    </section>
-  </div>
-</main>
-
-<dialog id="settings">
-  <h2>⚙️ Settings</h2>
-  <div class="field">
-    <label for="lang">Alert language (text + voice)</label>
-    <select id="lang">
-      <option value="en">English</option>
-      <option value="mr">मराठी</option>
-      <option value="hi">हिन्दी</option>
-    </select>
-  </div>
-  <div class="field">
-    <label for="thr">Bend sensitivity: <b id="thrV"></b>% (lower = bends easier)</label>
-    <input type="range" id="thr" min="20" max="80" step="5">
-  </div>
-  <div class="field">
-    <label for="hold">Hold time before alert: <b id="holdV"></b> ms</label>
-    <input type="range" id="hold" min="300" max="1500" step="100">
-  </div>
-  <label class="sw">Voice announcements <input type="checkbox" id="voice"></label>
-  <label class="sw">Emergency siren <input type="checkbox" id="siren"></label>
-  <label class="sw">Vibration (mobile) <input type="checkbox" id="vibrate"></label>
-  <div class="row-btns" style="margin-top:16px;justify-content:flex-end">
-    <button class="btn" id="resetCal">Reset calibration</button>
-    <button class="btn" id="closeSettings">Done</button>
-  </div>
-</dialog>
-
-<div class="toast" id="toast"></div>
-
-<script>
-(() => {
-'use strict';
-const $ = s => document.querySelector(s);
-
-const ESP_IP = 'http://192.168.9.73/status';
-
-const store = {
-  get(k, d){ try { const v = localStorage.getItem('sg_' + k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
-  set(k, v){ try { localStorage.setItem('sg_' + k, JSON.stringify(v)); } catch(e){} }
-};
-
-const F = [
-  { n:'Finger 1', pin:'GPIO 34' },
-  { n:'Finger 2', pin:'GPIO 35' },
-  { n:'Finger 3', pin:'GPIO 32' }
-];
-
-const CATS = {
-  normal:   { icon:'😊', color:'#34d399', name:'All good', pattern:0,
-              msg:{ en:'Patient is comfortable.', mr:'रुग्ण आरामात आहे.', hi:'मरीज़ आराम से है।' } },
-  water:    { icon:'💧', color:'#38bdf8', name:'Water', pattern:1,
-              msg:{ en:'I need water.', mr:'मला पाणी पाहिजे.', hi:'मुझे पानी चाहिए।' } },
-  medicine: { icon:'💊', color:'#a78bfa', name:'Medicine', pattern:2,
-              msg:{ en:'I need my medicine.', mr:'मला औषध पाहिजे.', hi:'मुझे दवा चाहिए।' } },
-  food:     { icon:'🍲', color:'#4ade80', name:'Food', pattern:4,
-              msg:{ en:'I am hungry.', mr:'मला भूक लागली आहे.', hi:'मुझे भूख लगी है।' } },
-  help:     { icon:'🤝', color:'#fbbf24', name:'Help', pattern:3,
-              msg:{ en:'I need help.', mr:'मला मदत पाहिजे.', hi:'मुझे मदद चाहिए।' } },
-  washroom: { icon:'🚻', color:'#2dd4bf', name:'Washroom', pattern:5,
-              msg:{ en:'I need the washroom.', mr:'मला स्वच्छतागृहात जायचे आहे.', hi:'मुझे शौचालय जाना है।' } },
-  pain:     { icon:'🩹', color:'#fb923c', name:'Pain', pattern:6,
-              msg:{ en:'I am in pain.', mr:'मला वेदना होत आहेत.', hi:'मुझे दर्द हो रहा है।' } },
-  emergency:{ icon:'🚨', color:'#f43f5e', name:'Emergency', pattern:7,
-              msg:{ en:'Emergency! Come immediately!', mr:'आणीबाणी! लगेच या!', hi:'आपातकाल! तुरंत आइए!' } }
-};
-const BY_MASK = {};
-Object.entries(CATS).forEach(([k, c]) => { if (c.pattern) BY_MASK[c.pattern] = k; });
-const VOICE_LANG = { en:'en-IN', mr:'mr-IN', hi:'hi-IN' };
-
-const S = Object.assign({ mode:'live', lang:'en', hold:600, thr:50, voice:true, siren:true, vibrate:true }, store.get('settings', {}));
-
-let cal = store.get('cal', null);
-if (!Array.isArray(cal) || cal.length !== 3) cal = F.map(() => ({ s:800, b:2600 }));
-let history = store.get('history', []);
-
-const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
-const saveS = () => store.set('settings', S);
-let toastT;
-function toast(msg){
-  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600);
-}
-function patternText(mask){
-  return F.map((f, i) => (mask & (1 << i)) ? f.n : null).filter(Boolean).join(' + ');
-}
-
-const fingersEl = $('#fingers');
-F.forEach((f, i) => {
-  fingersEl.insertAdjacentHTML('beforeend',
-    `<div class="finger" id="fg${i}"><div class="cap"><div class="fill"></div><div class="tick"></div></div>
-     <div class="fname">${f.n}</div><div class="fpin">${f.pin}</div><div class="fval">–</div></div>`);
-});
-function placeTicks(){ document.querySelectorAll('.tick').forEach(t => t.style.bottom = S.thr + '%'); }
-
-const simF = $('#simF');
-F.forEach((f, i) => simF.insertAdjacentHTML('beforeend', `<button data-i="${i}">☝️ ${i + 1}</button>`));
-const presetsEl = $('#presets');
-Object.entries(CATS).forEach(([k, c]) => {
-  if (k === 'normal') return;
-  presetsEl.insertAdjacentHTML('beforeend', `<button data-p="${c.pattern}">${c.icon} ${c.name}</button>`);
-});
-presetsEl.insertAdjacentHTML('beforeend', `<button data-p="0" style="grid-column:span 2;text-align:center">✋ Straighten all (reset)</button>`);
-
-function renderLegend(){
-  $('#legend').innerHTML = Object.entries(CATS).filter(([k]) => k !== 'normal').map(([k, c]) => `
-    <div class="lg" style="--c:${c.color}"><span class="e">${c.icon}</span>
-      <span class="t">${c.name} <small style="color:var(--sub);font-weight:500">(${c.msg[S.lang]})</small></span>
-      <span class="dots">${F.map((_, i) => `<i class="${c.pattern & (1 << i) ? 'f' : ''}"></i>`).join('')}</span></div>`).join('');
-}
-
-let ctx = null, soundOn = false, soundTouched = false;
-function ensureCtx(){
-  const A = window.AudioContext || window.webkitAudioContext;
-  if (!ctx && A) ctx = new A();
-  if (ctx && ctx.state === 'suspended') ctx.resume();
-}
-function tone(freq, t0, dur, type = 'sine', vol = .2){
-  const o = ctx.createOscillator(), g = ctx.createGain();
-  o.type = type; o.frequency.value = freq;
-  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .02);
-  g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
-  o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + dur + .05);
-}
-function chime(){ if (!soundOn || !ctx) return; const t = ctx.currentTime; tone(784, t, .25); tone(1047, t + .18, .4); }
-function siren(){
-  if (!soundOn || !ctx || !S.siren) return;
-  const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
-  o.type = 'sawtooth';
-  o.frequency.setValueAtTime(600, t);
-  o.frequency.linearRampToValueAtTime(1200, t + .4);
-  o.frequency.linearRampToValueAtTime(600, t + .85);
-  g.gain.value = .25; o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + .9);
-}
-function pickLang(l){
-  const voices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
-  if (l === 'mr' && !voices.some(v => v.lang.toLowerCase().startsWith('mr'))) return 'hi-IN';
-  return VOICE_LANG[l];
-}
-function speak(text){
-  if (!soundOn || !S.voice || !('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = pickLang(S.lang); u.rate = .95;
-  speechSynthesis.speak(u);
-}
-function buzz(p){ if (S.vibrate && navigator.vibrate) navigator.vibrate(p); }
-
-async function enableSound(){
-  soundOn = true; soundTouched = true; ensureCtx();
-  try { if (navigator.wakeLock) await navigator.wakeLock.request('screen'); } catch(e){}
-  paintSound(); chime();
-}
-function paintSound(){
-  const b = $('#soundBtn');
-  b.classList.toggle('on', soundOn);
-  b.textContent = soundOn ? '🔊 Voice & Siren ON (Tap to mute)' : '🔇 Tap to enable Voice & Siren';
-}
-$('#soundBtn').onclick = () => { if (soundOn) { soundOn = false; soundTouched = true; window.speechSynthesis && speechSynthesis.cancel(); paintSound(); } else enableSound(); };
-function autoSound(){ if (!soundTouched) enableSound(); }
-
-let shown = 'normal', emergency = null, sirenT = null, speakT = null;
-function showCat(cat){
-  if (emergency && cat !== 'emergency') return;
-  shown = cat;
-  const c = CATS[cat], el = $('#status');
-  el.style.setProperty('--c', c.color);
-  el.classList.toggle('is-emergency', cat === 'emergency');
-  document.body.classList.toggle('idle', cat === 'normal');
-  $('#stIcon').textContent = c.icon;
-  $('#stTitle').textContent = c.msg[S.lang];
-  $('#stSub').textContent = cat === 'normal' ? 'All fingers straight. Monitoring…' : `${c.name} request · ${patternText(c.pattern)} bent`;
-}
-function tickEmergency(){
-  if (!emergency) return;
-  const s = Math.floor((Date.now() - emergency.since) / 1000);
-  $('#stSub').textContent = `ACTIVE for ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} — waiting for caretaker`;
-}
-
-const fmtTime = ts => {
-  const d = new Date(ts), t = d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-  return d.toDateString() === new Date().toDateString() ? t : d.toLocaleDateString([], { day:'2-digit', month:'short' }) + ' ' + t;
-};
-function renderHistory(){
-  const list = $('#hist');
-  if (!history.length) list.innerHTML = '<li class="empty">No alerts yet. All quiet 🌿</li>';
-  else list.innerHTML = history.slice(0, 60).map(h => {
-    const c = CATS[h.cat] || CATS.help;
-    const ack = h.ackAt ? `<small>✅ Acknowledged after ${Math.max(1, Math.round((h.ackAt - h.ts) / 1000))}s</small>` : (h.cat === 'emergency' ? '<small>⚠️ Not acknowledged</small>' : '');
-    return `<li class="hi" style="--c:${c.color}"><span>${c.icon}</span><span class="m">${c.msg[S.lang]}${ack}</span><time>${fmtTime(h.ts)}</time></li>`;
-  }).join('');
-  const today = new Date().toDateString();
-  const counts = {};
-  history.filter(h => new Date(h.ts).toDateString() === today).forEach(h => counts[h.cat] = (counts[h.cat] || 0) + 1);
-  const chips = Object.entries(counts).map(([k, n]) => `<span class="chip" style="color:${CATS[k].color}">${CATS[k].icon} ${n}</span>`).join('');
-  $('#stats').innerHTML = chips ? chips + '<span class="chip">today</span>' : '<span class="chip">No alerts today</span>';
-}
-function addHistory(cat){
-  const e = { id: Date.now(), ts: Date.now(), cat };
-  history.unshift(e); history = history.slice(0, 200);
-  store.set('history', history); renderHistory();
-  return e;
-}
-$('#clearBtn').onclick = () => { if (history.length && confirm('Clear all alert history?')) { history = []; store.set('history', history); renderHistory(); } };
-$('#exportBtn').onclick = () => {
-  if (!history.length) { toast('Nothing to export yet'); return; }
-  const rows = ['time,type,message,acknowledged_after_sec'].concat(history.map(h =>
-    [new Date(h.ts).toISOString(), CATS[h.cat].name, '"' + CATS[h.cat].msg.en + '"', h.ackAt ? Math.round((h.ackAt - h.ts) / 1000) : ''].join(',')));
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type:'text/csv' }));
-  a.download = 'glove-alerts.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-};
-
-function fire(cat){
-  const c = CATS[cat], entry = addHistory(cat);
-  showCat(cat);
-  if (cat === 'emergency'){
-    if (emergency) return;
-    emergency = { since: Date.now(), entry };
-    document.body.classList.add('alarm');
-    siren(); sirenT = setInterval(siren, 1000);
-    speak(c.msg[S.lang]); speakT = setInterval(() => speak(c.msg[S.lang]), 9000);
-    buzz([400, 150, 400, 150, 400]);
-    tickEmergency();
-  } else {
-    chime(); setTimeout(() => speak(c.msg[S.lang]), 450); buzz([200, 100, 200]);
-  }
-}
-$('#ackBtn').onclick = () => {
-  if (!emergency) return;
-  emergency.entry.ackAt = Date.now(); store.set('history', history);
-  clearInterval(sirenT); clearInterval(speakT);
-  if ('speechSynthesis' in window) speechSynthesis.cancel();
-  emergency = null; document.body.classList.remove('alarm');
-  buzz(0); showCat('normal'); renderHistory(); toast('Emergency acknowledged ✅');
-};
-
-const simBent = [false, false, false];
-const simCur = [cal[0].s, cal[1].s, cal[2].s];
-function simValues(){
-  return simCur.map((v, i) => {
-    const target = simBent[i] ? cal[i].b : cal[i].s;
-    simCur[i] = v + (target - v) * .35;
-    return simCur[i] + (Math.random() - .5) * 40;
-  });
-}
-async function fetchLive(){
-  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 1500);
-  try {
-    const r = await fetch(ESP_IP, { signal: ctrl.signal, cache: 'no-store' });
-    const j = await r.json();
-    const v = [j.f1, j.f2, j.f3].map(Number);
-    return v.some(isNaN) ? null : v;
-  } catch(e){ return null; } finally { clearTimeout(t); }
-}
-let connState = '';
-function setConn(st){
-  if (st === connState) return; connState = st;
-  const p = $('#pill');
-  p.className = 'pill' + (st === 'live' ? ' live' : st === 'off' ? ' off' : '');
-  $('#pillTxt').textContent = st === 'live' ? 'ESP32 connected' : st === 'off' ? 'ESP32 not reachable' : 'Demo mode';
-}
-
-let calib = null;
-function calibrate(kind){
-  if (S.mode !== 'live') { toast('Switch to Live ESP32 mode first'); return; }
-  toast(kind === 's' ? 'Keep all fingers STRAIGHT… starting in 3s' : 'BEND all fingers fully… starting in 3s');
-  setTimeout(() => {
-    calib = { samples: [] };
-    setTimeout(() => {
-      const sm = calib.samples; calib = null;
-      if (!sm.length) { toast('No data received. Check connection.'); return; }
-      F.forEach((_, i) => { cal[i][kind] = Math.round(sm.reduce((a, r) => a + r[i], 0) / sm.length); });
-      store.set('cal', cal);
-      const weak = cal.some(c => Math.abs(c.b - c.s) < 300);
-      toast(weak ? 'Saved, but straight & bent values are too close. Calibrate both again.' : (kind === 's' ? 'Straight position saved ✔' : 'Bent position saved ✔'));
-    }, 1200);
-  }, 3000);
-}
-$('#calS').onclick = () => calibrate('s');
-$('#calB').onclick = () => calibrate('b');
-
-const pctOf = (v, i) => { const { s, b } = cal[i]; return b === s ? 0 : (v - s) / (b - s); };
-let cand = 0, candSince = 0, lastFired = 0, busy = false;
-
-function handle(vals, now){
-  if (calib) calib.samples.push(vals.slice());
-  const flags = vals.map((v, i) => pctOf(v, i) > S.thr / 100);
-  vals.forEach((v, i) => {
-    const el = $('#fg' + i);
-    el.querySelector('.fill').style.height = clamp(pctOf(v, i), 0, 1) * 100 + '%';
-    el.querySelector('.fval').textContent = Math.round(v);
-    el.classList.toggle('bent', flags[i]);
-  });
-  const mask = flags.reduce((m, f, i) => m | (f ? 1 << i : 0), 0);
-  if (mask !== cand) { cand = mask; candSince = now; }
-  const held = now - candSince;
-
-  if (mask === 0){
-    if (held > 500) lastFired = 0;
-    if (held > 3500 && shown !== 'normal' && !emergency) showCat('normal');
-    $('#holdBar').style.width = '0';
-    return;
-  }
-  const c = CATS[BY_MASK[mask]];
-  if (mask !== lastFired){
-    $('#holdBar').style.width = clamp(held / S.hold, 0, 1) * 100 + '%';
-    $('#status').style.setProperty('--c', emergency ? CATS.emergency.color : c.color);
-    if (held >= S.hold){ lastFired = mask; $('#holdBar').style.width = '0'; fire(BY_MASK[mask]); }
-  } else $('#holdBar').style.width = '0';
-}
-
-async function tick(){
-  if (busy) return; busy = true;
-  try {
-    let vals;
-    if (S.mode === 'demo'){ vals = simValues(); setConn('demo'); }
-    else { vals = await fetchLive(); if (!vals){ setConn('off'); return; } setConn('live'); }
-    handle(vals, Date.now());
-  } finally { busy = false; }
-}
-
-function paintSim(){ simF.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', simBent[i])); }
-simF.onclick = e => { const b = e.target.closest('button'); if (!b) return; autoSound(); simBent[+b.dataset.i] = !simBent[+b.dataset.i]; paintSim(); };
-presetsEl.onclick = e => {
-  const b = e.target.closest('button'); if (!b) return; autoSound();
-  const m = +b.dataset.p; F.forEach((_, i) => simBent[i] = !!(m & (1 << i))); paintSim();
-};
-document.addEventListener('keydown', e => {
-  if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) || S.mode !== 'demo') return;
-  if (e.key >= '1' && e.key <= '3'){ autoSound(); simBent[+e.key - 1] = !simBent[+e.key - 1]; paintSim(); }
-  if (e.key === '0'){ simBent.fill(false); paintSim(); }
-});
-
-function applyMode(){
-  document.body.classList.toggle('live', S.mode === 'live');
-  document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
-  if (S.mode === 'demo') setConn('demo');
-}
-$('#modeSeg').onclick = e => {
-  const b = e.target.closest('button'); if (!b) return;
-  S.mode = b.dataset.mode; saveS(); connState = ''; applyMode();
-  if (S.mode === 'live') setConn('off');
-};
-
-const dlg = $('#settings');
-function syncSettings(){
-  $('#lang').value = S.lang; $('#thr').value = S.thr; $('#hold').value = S.hold;
-  $('#thrV').textContent = S.thr; $('#holdV').textContent = S.hold;
-  $('#voice').checked = S.voice; $('#siren').checked = S.siren; $('#vibrate').checked = S.vibrate;
-}
-$('#openSettings').onclick = () => { syncSettings(); dlg.showModal(); };
-$('#closeSettings').onclick = () => dlg.close();
-$('#lang').onchange = e => { S.lang = e.target.value; saveS(); showCat(emergency ? 'emergency' : shown); renderHistory(); renderLegend(); speak(CATS.normal.msg[S.lang]); };
-$('#thr').oninput = e => { S.thr = +e.target.value; $('#thrV').textContent = S.thr; saveS(); placeTicks(); };
-$('#hold').oninput = e => { S.hold = +e.target.value; $('#holdV').textContent = S.hold; saveS(); };
-['voice', 'siren', 'vibrate'].forEach(k => $('#' + k).onchange = e => { S[k] = e.target.checked; saveS(); });
-$('#resetCal').onclick = () => { cal = F.map(() => ({ s:800, b:2600 })); store.set('cal', cal); toast('Calibration reset to defaults'); };
-
-applyMode(); renderLegend(); renderHistory(); placeTicks(); paintSim(); paintSound(); showCat('normal');
-if (S.mode === 'live') setConn('off');
-if ('speechSynthesis' in window) speechSynthesis.getVoices();
+loadVoices(); if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = loadVoices;
 setInterval(tick, 200);
 setInterval(tickEmergency, 1000);
 })();
