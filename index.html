@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Glove Dashboard</title>
+  <title>Smart Glove - 3 Finger Monitor</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     * {
@@ -13,125 +13,135 @@
       font-family: 'Poppins', sans-serif;
     }
     body {
-      background: #0f172a;
-      color: #f8fafc;
-      padding: 20px;
+      background-color: #0b0f19;
+      color: #f1f5f9;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
+      padding: 24px 16px;
     }
     header {
       text-align: center;
-      margin-bottom: 25px;
+      margin-bottom: 24px;
     }
     header h1 {
-      font-size: 2rem;
+      font-size: 1.8rem;
       color: #38bdf8;
-      letter-spacing: 1px;
+      font-weight: 700;
     }
     header p {
       color: #94a3b8;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      margin-top: 4px;
     }
-    .container {
+    .main-grid {
       width: 100%;
-      max-width: 900px;
+      max-width: 950px;
       display: grid;
       grid-template-columns: 1fr;
       gap: 20px;
     }
     @media (min-width: 768px) {
-      .container {
+      .main-grid {
         grid-template-columns: 1fr 1fr;
       }
     }
     .card {
-      background: #1e293b;
-      border-radius: 14px;
+      background: #161f30;
+      border: 1px solid #233249;
+      border-radius: 16px;
       padding: 20px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-      border: 1px solid #334155;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
     }
     .card h2 {
-      font-size: 1.25rem;
-      margin-bottom: 15px;
-      color: #f1f5f9;
-      border-bottom: 1px solid #334155;
-      padding-bottom: 8px;
+      font-size: 1.15rem;
+      margin-bottom: 16px;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #233249;
+      padding-bottom: 10px;
     }
     /* 3 Fingers Display */
-    .finger-box {
-      margin-bottom: 16px;
+    .finger-item {
+      margin-bottom: 18px;
     }
-    .finger-info {
+    .finger-label {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 6px;
-      font-weight: 500;
       font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 8px;
     }
-    .progress-bar-bg {
-      background: #334155;
+    .progress-track {
+      background: #0b0f19;
+      border-radius: 10px;
       height: 14px;
-      border-radius: 7px;
       overflow: hidden;
+      border: 1px solid #2d3f5d;
     }
-    .progress-bar-fill {
+    .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #38bdf8, #6366f1);
-      width: 50%;
+      background: linear-gradient(90deg, #0ea5e9, #6366f1);
+      width: 60%;
+      border-radius: 10px;
       transition: width 0.3s ease;
     }
-    /* Gesture Status */
-    .status-panel {
-      background: #0f172a;
-      border: 1px dashed #475569;
-      border-radius: 10px;
-      padding: 12px;
-      margin-top: 15px;
+    /* Output Status Box */
+    .output-box {
+      background: #0b0f19;
+      border: 1px solid #2d3f5d;
+      border-radius: 12px;
+      padding: 14px;
       text-align: center;
+      margin-top: 20px;
     }
-    .status-panel span {
-      display: block;
-      font-size: 0.85rem;
+    .output-box .title {
+      font-size: 0.8rem;
       color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    .status-panel strong {
-      font-size: 1.1rem;
+    .output-box .status {
+      font-size: 1.15rem;
       color: #22c55e;
+      font-weight: 600;
+      margin-top: 4px;
     }
-    /* Video Section */
-    .video-wrapper {
+    /* Video Box */
+    .video-container {
       position: relative;
-      padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-      height: 0;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 ratio */
+      border-radius: 12px;
       overflow: hidden;
-      border-radius: 10px;
       background: #000;
+      border: 1px solid #233249;
     }
-    .video-wrapper iframe, .video-wrapper video {
+    .video-container video {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      border: 0;
-      border-radius: 10px;
+      object-fit: cover;
     }
-    .btn-test {
-      margin-top: 15px;
+    .sim-btn {
       width: 100%;
-      padding: 10px;
+      margin-top: 15px;
+      padding: 12px;
       background: #2563eb;
       color: white;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
+      border-radius: 10px;
+      font-size: 0.95rem;
       font-weight: 600;
-      transition: 0.2s;
+      cursor: pointer;
+      transition: background 0.2s;
     }
-    .btn-test:hover {
+    .sim-btn:hover {
       background: #1d4ed8;
     }
   </style>
@@ -140,99 +150,103 @@
 
   <header>
     <h1>🧤 Smart Gesture Glove</h1>
-    <p>3-Finger Flex Sensor Monitoring & Demonstration</p>
+    <p>3 Flex Sensors Live Monitor & Video Demo</p>
   </header>
 
-  <div class="container">
-    <!-- Finger Monitoring Card -->
+  <div class="main-grid">
+    <!-- Live Sensors Panel -->
     <div class="card">
-      <h2>Finger Sensor Live Status</h2>
-      
+      <h2>📊 Live Sensor Data (3 Fingers)</h2>
+
       <!-- Finger 1 -->
-      <div class="finger-box">
-        <div class="finger-info">
+      <div class="finger-item">
+        <div class="finger-label">
           <span>Finger 1 (Thumb)</span>
-          <span id="val1">50%</span>
+          <span id="v1">55%</span>
         </div>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="bar1" style="width: 50%;"></div>
+        <div class="progress-track">
+          <div class="progress-fill" id="b1" style="width: 55%;"></div>
         </div>
       </div>
 
       <!-- Finger 2 -->
-      <div class="finger-box">
-        <div class="finger-info">
+      <div class="finger-item">
+        <div class="finger-label">
           <span>Finger 2 (Index)</span>
-          <span id="val2">75%</span>
+          <span id="v2">80%</span>
         </div>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="bar2" style="width: 75%;"></div>
+        <div class="progress-track">
+          <div class="progress-fill" id="b2" style="width: 80%;"></div>
         </div>
       </div>
 
       <!-- Finger 3 -->
-      <div class="finger-box">
-        <div class="finger-info">
+      <div class="finger-item">
+        <div class="finger-label">
           <span>Finger 3 (Middle)</span>
-          <span id="val3">30%</span>
+          <span id="v3">40%</span>
         </div>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="bar3" style="width: 30%;"></div>
+        <div class="progress-track">
+          <div class="progress-fill" id="b3" style="width: 40%;"></div>
         </div>
       </div>
 
-      <div class="status-panel">
-        <span>Detected Gesture Output:</span>
-        <strong id="gestureText">Need Water / मदत हवी आहे</strong>
+      <div class="output-box">
+        <div class="title">Recognized Gesture Message</div>
+        <div class="status" id="gestureMsg">Need Water (पाणी हवे आहे)</div>
       </div>
 
-      <button class="btn-test" onclick="simulateData()">Simulate Random Sensor Data</button>
+      <button class="sim-btn" onclick="randomData()">Simulate Random Readings</button>
     </div>
 
-    <!-- Video Demonstration Card -->
+    <!-- Video Demo Panel -->
     <div class="card">
-      <h2>Project Demo Video</h2>
-      <div class="video-wrapper">
-        <!-- Random / Demo Video Added (MP4 open-source test stream) -->
+      <h2>🎥 Working Demo Video</h2>
+      <div class="video-container">
+        <!-- Working MP4 Demo Stream -->
         <video controls autoplay muted loop playsinline>
           <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
-          तुमचा ब्राउझर व्हिडिओ टॅग सपोर्ट करत नाही.
+          व्हिडिओ लोड होऊ शकला नाही.
         </video>
       </div>
-      <p style="margin-top: 10px; font-size: 0.8rem; color: #94a3b8; text-align: center;">
-        * येथे तुमच्या Glove चा प्रत्यक्षातला वर्किंग व्हिडिओ बदलण्यासाठी `src` मधील URL बदला.
+      <p style="margin-top: 12px; font-size: 0.8rem; color: #94a3b8; text-align: center;">
+        प्रोजेक्टचा डेमो व्हिडिओ येथे आपोआप चालू होईल.
       </p>
     </div>
   </div>
 
   <script>
-    // 3 बोटांचे व्हॅल्यूज अपडेट करण्याचे लॉजिक
-    function updateFingers(f1, f2, f3) {
-      document.getElementById('bar1').style.width = f1 + '%';
-      document.getElementById('val1').innerText = f1 + '%';
-      
-      document.getElementById('bar2').style.width = f2 + '%';
-      document.getElementById('val2').innerText = f2 + '%';
-      
-      document.getElementById('bar3').style.width = f3 + '%';
-      document.getElementById('val3').innerText = f3 + '%';
+    function updateSensors(f1, f2, f3) {
+      document.getElementById('b1').style.width = f1 + '%';
+      document.getElementById('v1').innerText = f1 + '%';
 
-      // सॅम्पल जेस्चर मॅपिंग
+      document.getElementById('b2').style.width = f2 + '%';
+      document.getElementById('v2').innerText = f2 + '%';
+
+      document.getElementById('b3').style.width = f3 + '%';
+      document.getElementById('v3').innerText = f3 + '%';
+
+      const msg = document.getElementById('gestureMsg');
       if (f1 > 70 && f2 > 70) {
-        document.getElementById('gestureText').innerText = "Emergency Alert / तातडीची मदत!";
+        msg.innerText = "🚨 Emergency Alert!";
+        msg.style.color = "#ef4444";
       } else if (f2 > 60) {
-        document.getElementById('gestureText').innerText = "Need Water / पाणी हवे आहे";
+        msg.innerText = "💧 Need Water (पाणी हवे आहे)";
+        msg.style.color = "#38bdf8";
+      } else if (f3 > 60) {
+        msg.innerText = "💊 Need Medicine (औषध हवे आहे)";
+        msg.style.color = "#fbbf24";
       } else {
-        document.getElementById('gestureText').innerText = "Normal / सर्व ठीक आहे";
+        msg.innerText = "✅ Normal / Comfortable";
+        msg.style.color = "#22c55e";
       }
     }
 
-    // टेस्ट करण्यासाठी रँडम डेटा जनरेटर
-    function simulateData() {
-      const r1 = Math.floor(Math.random() * 100);
-      const r2 = Math.floor(Math.random() * 100);
-      const r3 = Math.floor(Math.random() * 100);
-      updateFingers(r1, r2, r3);
+    function randomData() {
+      const val1 = Math.floor(Math.random() * 95) + 5;
+      const val2 = Math.floor(Math.random() * 95) + 5;
+      const val3 = Math.floor(Math.random() * 95) + 5;
+      updateSensors(val1, val2, val3);
     }
   </script>
 </body>
