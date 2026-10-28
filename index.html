@@ -10,6 +10,7 @@
       --card-bg: #151d30;
       --accent: #38bdf8;
       --green: #22c55e;
+      --red: #ef4444;
       --text: #f8fafc;
       --text-muted: #94a3b8;
     }
@@ -24,10 +25,12 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      max-width: 1000px;
+      max-width: 1050px;
       margin: 0 auto 20px;
       padding-bottom: 15px;
       border-bottom: 1px solid #1e293b;
+      flex-wrap: wrap;
+      gap: 10px;
     }
     .brand {
       display: flex;
@@ -36,6 +39,11 @@
     }
     .brand h1 { margin: 0; font-size: 20px; }
     .brand p { margin: 0; font-size: 13px; color: var(--text-muted); }
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
     .badge {
       display: inline-flex;
       align-items: center;
@@ -48,14 +56,14 @@
     .dot {
       width: 8px;
       height: 8px;
-      background: #ef4444;
+      background: var(--red);
       border-radius: 50%;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 20px;
-      max-width: 1000px;
+      max-width: 1050px;
       margin: 0 auto;
     }
     .card {
@@ -67,36 +75,69 @@
     .hero-card {
       text-align: center;
       border: 1px solid #0284c7;
+      background: linear-gradient(180deg, #151d30 0%, #0f172a 100%);
     }
-    .hero-icon { font-size: 45px; margin-bottom: 8px; }
-    .hero-title { font-size: 22px; font-weight: bold; color: var(--accent); }
-    .hero-desc { color: var(--text-muted); font-size: 14px; margin-top: 5px; }
+    .hero-icon { font-size: 50px; margin-bottom: 8px; }
+    .hero-title { font-size: 26px; font-weight: bold; color: var(--accent); }
+    .hero-desc { color: var(--text-muted); font-size: 15px; margin-top: 5px; }
     
     .bar-container { margin: 15px 0; }
     .bar-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
     .progress { background: #0f172a; height: 10px; border-radius: 5px; overflow: hidden; }
     .fill { height: 100%; background: var(--green); width: 0%; transition: width 0.3s; }
 
-    input {
-      width: calc(100% - 24px);
+    input, select {
+      width: 100%;
       padding: 10px;
       background: #0f172a;
       border: 1px solid #334155;
       color: #fff;
       border-radius: 8px;
-      margin-top: 10px;
+      margin-top: 8px;
+      margin-bottom: 12px;
       outline: none;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    .btn-sound {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
     ul { list-style: none; padding: 0; margin: 10px 0 0; max-height: 180px; overflow-y: auto; }
     li {
       background: #0f172a;
-      padding: 8px 12px;
+      padding: 10px 12px;
       border-radius: 6px;
       margin-bottom: 6px;
-      font-size: 13px;
+      font-size: 14px;
       display: flex;
       justify-content: space-between;
-      border-left: 3px solid var(--accent);
+      border-left: 4px solid var(--accent);
+    }
+    .video-wrapper {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #000;
+      margin-top: 10px;
+    }
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
     }
   </style>
 </head>
@@ -110,21 +151,25 @@
         <p>Patient assistive alert system</p>
       </div>
     </div>
-    <div class="badge">
-      <span class="dot" id="connDot"></span>
-      <span id="connText">Disconnected</span>
+    
+    <div class="header-controls">
+      <button class="btn-sound" id="soundBtn" onclick="toggleSound()">🔊 Voice: ON</button>
+      <div class="badge">
+        <span class="dot" id="connDot"></span>
+        <span id="connText">Disconnected</span>
+      </div>
     </div>
   </div>
 
   <div class="grid">
-    <!-- Live Status Section -->
+    <!-- १. लाईव्ह मेसेज कार्ड (Hero Message Box) -->
     <div class="card hero-card">
       <div class="hero-icon" id="heroIcon">😊</div>
       <div class="hero-title" id="statusTitle">All good</div>
       <div class="hero-desc" id="statusDesc">All is well. Patient is resting comfortably.</div>
     </div>
 
-    <!-- Live Sensors Bars -->
+    <!-- २. लाईव्ह सेन्सर बार्स -->
     <div class="card">
       <h3 style="margin-top:0;">Live Flex Sensors</h3>
       <div class="bar-container">
@@ -141,28 +186,105 @@
       </div>
     </div>
 
-    <!-- Connection Config -->
+    <!-- ३. व्हिडिओ सेक्शन (Project Demo Video) -->
     <div class="card">
-      <h3 style="margin-top:0;">Connection</h3>
+      <h3 style="margin-top:0;">Project Demo Video</h3>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+          title="Smart Glove Demo" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+
+    <!-- ४. कनेक्शन आणि व्हॉईस भाषा सेटिंग्ज -->
+    <div class="card">
+      <h3 style="margin-top:0;">Settings & Voice Language</h3>
+      
+      <label style="font-size: 13px; color: var(--text-muted);">आवाजाची भाषा निवडा (Voice Language):</label>
+      <select id="langSelect">
+        <option value="mr-IN">मराठी (Marathi Voice)</option>
+        <option value="en-US">English Voice</option>
+        <option value="hi-IN">हिन्दी (Hindi Voice)</option>
+      </select>
+
       <label style="font-size: 13px; color: var(--text-muted);">ESP32 IP Address:</label>
-    <input type="text" id="ipInput" value="192.168.9.73" placeholder="उदा. 192.168.9.73">
-      <p style="font-size: 12px; color: var(--text-muted); margin-top: 10px;">
-        मोबाईल/लॅपटॉप आणि ESP32 एकाच Wi-Fi वर असणे आवश्यक आहे.
+      <input type="text" id="ipInput" value="192.168.9.73" placeholder="192.168.9.73">
+      
+      <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+        मोबाईल/लॅपटॉप आणि ESP32 एकाच Wi-Fi वर जोडलेले असावेत.
       </p>
     </div>
 
-    <!-- Alert History -->
+    <!-- ५. अलर्ट हिस्ट्री -->
     <div class="card">
       <h3 style="margin-top:0;">Alert History</h3>
       <ul id="historyList">
-        <li><span>System Started</span><span style="color:var(--text-muted);">Just now</span></li>
+        <li><span>System Ready</span><span style="color:var(--text-muted);">Just now</span></li>
       </ul>
     </div>
   </div>
 
   <script>
     let lastAlert = "";
+    let soundEnabled = true;
 
+    // भाषेनुसार उच्चारणासाठी शब्दकोश
+    const voiceMessages = {
+      "mr-IN": {
+        "Need Water": "पाणी हवे आहे",
+        "Need Food": "जेवण हवे आहे",
+        "Emergency": "तातडीची मदत हवी आहे",
+        "Washroom": "वॉशरुमला जायचे आहे",
+        "Medicine": "औषध हवे आहे"
+      },
+      "hi-IN": {
+        "Need Water": "पानी चाहिए",
+        "Need Food": "खाना चाहिए",
+        "Emergency": "मदद चाहिए",
+        "Washroom": "वॉशरूम जाना है",
+        "Medicine": "दवाई चाहिए"
+      },
+      "en-US": {
+        "Need Water": "Need Water",
+        "Need Food": "Need Food",
+        "Emergency": "Emergency alert! Need assistance",
+        "Washroom": "Need to go to washroom",
+        "Medicine": "Need medicine"
+      }
+    };
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById("soundBtn");
+      if (soundEnabled) {
+        btn.innerText = "🔊 Voice: ON";
+        btn.style.background = "#0284c7";
+      } else {
+        btn.innerText = "🔇 Voice: OFF";
+        btn.style.background = "#475569";
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    // आवाज बोलण्याचे फंक्शन
+    function playVoiceAlert(status) {
+      if (!soundEnabled || !('speechSynthesis' in window)) return;
+
+      window.speechSynthesis.cancel();
+      const lang = document.getElementById("langSelect").value;
+      const phrase = (voiceMessages[lang] && voiceMessages[lang][status]) ? voiceMessages[lang][status] : status;
+
+      const utterance = new SpeechSynthesisUtterance(phrase);
+      utterance.lang = lang;
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // ESP32 कडून डेटा खेचणे
     async function fetchData() {
       const ip = document.getElementById("ipInput").value.trim();
       const dot = document.getElementById("connDot");
@@ -175,14 +297,15 @@
         if (res.ok) {
           const data = await res.json();
           
-          dot.style.background = "#22c55e";
+          dot.style.background = "var(--green)";
           text.innerText = "Connected";
 
+          // मेसेज अपडेट करणे
           document.getElementById("heroIcon").innerText = data.icon;
           document.getElementById("statusTitle").innerText = data.status;
           document.getElementById("statusDesc").innerText = data.detail;
 
-          // Bars update (0 to 100%)
+          // बोटांचे बार्स अपडेट करणे
           document.getElementById("f1Bar").style.width = data.f1 + "%";
           document.getElementById("f1Val").innerText = data.f1 + "%";
           document.getElementById("f2Bar").style.width = data.f2 + "%";
@@ -190,21 +313,26 @@
           document.getElementById("f3Bar").style.width = data.f3 + "%";
           document.getElementById("f3Val").innerText = data.f3 + "%";
 
-          // Alert history push
+          // नवीन अलर्ट आल्यावर आवाज देणे व हिस्ट्रीमध्ये नोंद करणे
           if (data.status !== "All good" && data.status !== lastAlert) {
             lastAlert = data.status;
+            playVoiceAlert(data.status);
+
             const li = document.createElement("li");
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            li.innerHTML = `<span>${data.icon} ${data.status}</span><span style="color:#94a3b8;">${time}</span>`;
+            li.innerHTML = `<span>${data.icon} <b>${data.status}</b></span><span style="color:#94a3b8;">${time}</span>`;
             document.getElementById("historyList").prepend(li);
+          } else if (data.status === "All good") {
+            lastAlert = "All good";
           }
         }
       } catch (e) {
-        dot.style.background = "#ef4444";
+        dot.style.background = "var(--red)";
         text.innerText = "Disconnected";
       }
     }
 
+    // दर १.५ सेकंदांनी ऑटो-रिफ्रेश
     setInterval(fetchData, 1500);
   </script>
 </body>
