@@ -364,4 +364,299 @@ function tone(freq, t0, dur, type = 'sine', vol = .2){
   o.type = type; o.frequency.value = freq;
   g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .02);
   g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
-  o.connect(g); g.connect(ctx.destination); o.start(t0); o.s
+  o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + dur + .05);
+}
+function chime(){ if (!soundOn || !ctx) return; const t = ctx.currentTime; tone(784, t, .25); tone(1047, t + .18, .4); }
+function siren(){
+  if (!soundOn || !ctx || !S.siren) return;
+  const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(600, t);
+  o.frequency.linearRampToValueAtTime(1200, t + .4);
+  o.frequency.linearRampToValueAtTime(600, t + .85);
+  g.gain.value = .25; o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + .9);
+}
+let VOICES = [];
+function loadVoices(){ if ('speechSynthesis' in window) VOICES = speechSynthesis.getVoices() || []; }
+function pickVoice(l){
+  const find = p => VOICES.find(v => v.lang.toLowerCase().replace('_','-').startsWith(p));
+  if (l === 'mr') return find('mr') || find('hi') || find('en-in') || find('en') || null;
+  if (l === 'hi') return find('hi') || find('en-in') || find('en') || null;
+  return find('en-in') || find('en') || null;
+}
+let warnedVoice = false;
+function speak(text){
+  if (!soundOn || !S.voice || !('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickVoice(S.lang);
+  if (v){ u.voice = v; u.lang = v.lang; } else u.lang = VOICE_LANG[S.lang];
+  if (S.lang !== 'en' && v && !v.lang.toLowerCase().startsWith(S.lang) && !warnedVoice){
+    warnedVoice = true; toast('Hya device var ' + (S.lang === 'mr' ? 'Marathi' : 'Hindi') + ' voice nahi. Dusri voice vaparli jat aahe, text barobar disel.');
+  }
+  speechSynthesis.cancel();
+  setTimeout(() => speechSynthesis.speak(u), 60);
+}
+const buzz = p => { if (S.vibrate && navigator.vibrate) navigator.vibrate(p); };
+
+async function enableSound(){
+  soundOn = true; soundTouched = true; ensureCtx();
+  try { if (navigator.wakeLock) await navigator.wakeLock.request('screen'); } catch(e){}
+  paintSound(); chime();
+}
+function paintSound(){
+  const b = $('#soundBtn');
+  b.classList.toggle('on', soundOn);
+  b.textContent = soundOn ? '🔊 Voice & Siren ON (tap to mute)' : '🔇 Tap to enable Voice & Siren';
+}
+$('#soundBtn').onclick = () => {
+  if (soundOn){ soundOn = false; soundTouched = true; window.speechSynthesis && speechSynthesis.cancel(); paintSound(); }
+  else enableSound();
+};
+const autoSound = () => { if (!soundTouched) enableSound(); };
+
+/* status card */
+let shown = 'normal', emergency = null, sirenT = null, speakT = null;
+function showCat(cat){
+  if (emergency && cat !== 'emergency') return;
+  shown = cat;
+  const c = CATS[cat], el = $('#status');
+  el.style.setProperty('--c', c.color);
+  el.classList.toggle('is-emergency', cat === 'emergency');
+  document.body.classList.toggle('idle', cat === 'normal');
+  $('#stIcon').textContent = c.icon;
+  $('#stTag').textContent = c.name;
+  $('#stTitle').textContent = c.msg[S.lang];
+  $('#stSub').textContent = cat === 'normal' ? 'All fingers straight. Monitoring…' : `${patternText(c.pattern)} bent`;
+  el.classList.remove('pulse'); void el.offsetWidth; if (cat !== 'normal') el.classList.add('pulse');
+}
+function tickEmergency(){
+  if (!emergency) return;
+  const s = Math.floor((Date.now() - emergency.since) / 1000);
+  $('#stSub').textContent = `ACTIVE for ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} — waiting for caretaker`;
+}
+
+/* history */
+const fmtTime = ts => {
+  const d = new Date(ts), t = d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  return d.toDateString() === new Date().toDateString() ? t : d.toLocaleDateString([], { day:'2-digit', month:'short' }) + ' ' + t;
+};
+function renderHistory(){
+  const list = $('#hist');
+  if (!history.length) list.innerHTML = '<li class="empty">No alerts yet. All quiet 🌿</li>';
+  else list.innerHTML = history.slice(0, 60).map(h => {
+    const c = CATS[h.cat] || CATS.help;
+    const ack = h.ackAt ? `<small>✅ Acknowledged after ${Math.max(1, Math.round((h.ackAt - h.ts) / 1000))}s</small>` : (h.cat === 'emergency' ? '<small>⚠️ Not acknowledged</small>' : '');
+    return `<li class="hi" style="--c:${c.color}"><span style="font-size:22px;text-align:center">${c.icon}</span><span class="m">${c.msg[S.lang]}${ack}</span><time>${fmtTime(h.ts)}</time></li>`;
+  }).join('');
+  const today = new Date().toDateString(), counts = {};
+  history.filter(h => new Date(h.ts).toDateString() === today).forEach(h => counts[h.cat] = (counts[h.cat] || 0) + 1);
+  const chips = Object.entries(counts).map(([k, n]) => `<span class="chip" style="color:${CATS[k].color}">${CATS[k].icon} ${n}</span>`).join('');
+  $('#stats').innerHTML = chips ? chips + '<span class="chip">today</span>' : '<span class="chip">No alerts today</span>';
+}
+function addHistory(cat){
+  const e = { id: Date.now(), ts: Date.now(), cat };
+  history.unshift(e); history = history.slice(0, 200);
+  store.set('history', history); renderHistory();
+  return e;
+}
+$('#clearBtn').onclick = () => { if (history.length && confirm('Clear all alert history?')){ history = []; store.set('history', history); renderHistory(); } };
+$('#exportBtn').onclick = () => {
+  if (!history.length){ toast('Nothing to export yet'); return; }
+  const rows = ['time,type,message,acknowledged_after_sec'].concat(history.map(h =>
+    [new Date(h.ts).toISOString(), CATS[h.cat].name, '"' + CATS[h.cat].msg.en + '"', h.ackAt ? Math.round((h.ackAt - h.ts) / 1000) : ''].join(',')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type:'text/csv' }));
+  a.download = 'glove-alerts.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+
+/* firing alerts */
+function fire(cat){
+  const c = CATS[cat], entry = addHistory(cat);
+  if (soundOn) ensureCtx(); else $('#soundBtn').animate([{transform:'scale(1)'},{transform:'scale(1.04)'},{transform:'scale(1)'}],{duration:500,iterations:3});
+  showCat(cat);
+  if (cat === 'emergency'){
+    if (emergency) return;
+    emergency = { since: Date.now(), entry };
+    document.body.classList.add('alarm');
+    siren(); sirenT = setInterval(siren, 1000);
+    speak(c.msg[S.lang]); speakT = setInterval(() => speak(c.msg[S.lang]), 9000);
+    buzz([400, 150, 400, 150, 400]);
+    tickEmergency();
+  } else {
+    chime(); setTimeout(() => speak(c.msg[S.lang]), 450); buzz([200, 100, 200]);
+  }
+}
+$('#ackBtn').onclick = () => {
+  if (!emergency) return;
+  emergency.entry.ackAt = Date.now(); store.set('history', history);
+  clearInterval(sirenT); clearInterval(speakT);
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  emergency = null; document.body.classList.remove('alarm');
+  buzz(0); showCat('normal'); renderHistory(); toast('Emergency acknowledged ✅');
+};
+
+/* demo + live data */
+const simBent = [false, false, false];
+const simCur = [cal[0].s, cal[1].s, cal[2].s];
+function simValues(){
+  return simCur.map((v, i) => {
+    const target = simBent[i] ? cal[i].b : cal[i].s;
+    simCur[i] = v + (target - v) * .35;
+    return simCur[i] + (Math.random() - .5) * 40;
+  });
+}
+async function fetchLive(){
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 1500);
+  try {
+    const r = await fetch(espUrl(), { signal: ctrl.signal, cache: 'no-store' });
+    const j = await r.json();
+    const v = [j.f1, j.f2, j.f3].map(Number);
+    return v.some(isNaN) ? null : v;
+  } catch(e){ return null; } finally { clearTimeout(t); }
+}
+let connState = '';
+function setConn(st){
+  if (st === connState) return; connState = st;
+  const p = $('#pill');
+  p.className = 'pill' + (st === 'live' ? ' live' : st === 'off' ? ' off' : st === 'demo' ? ' demo' : '');
+  $('#pillTxt').textContent = st === 'live' ? 'ESP32 connected' : st === 'off' ? 'ESP32 not reachable' : 'Demo mode';
+}
+
+/* calibration */
+let calib = null;
+function calibrate(kind){
+  if (S.mode !== 'live'){ toast('Switch to Live ESP32 mode first'); return; }
+  toast(kind === 's' ? 'Keep all fingers STRAIGHT… starting in 3s' : 'BEND all fingers fully… starting in 3s');
+  setTimeout(() => {
+    calib = { samples: [] };
+    setTimeout(() => {
+      const sm = calib.samples; calib = null;
+      if (!sm.length){ toast('No data received. Check connection.'); return; }
+      F.forEach((_, i) => { cal[i][kind] = Math.round(sm.reduce((a, r) => a + r[i], 0) / sm.length); });
+      store.set('cal', cal);
+      const weak = cal.some(c => Math.abs(c.b - c.s) < 300);
+      toast(weak ? 'Saved, but straight & bent values are too close. Calibrate both again.' : (kind === 's' ? 'Straight position saved ✔' : 'Bent position saved ✔'));
+    }, 1200);
+  }, 3000);
+}
+$('#calS').onclick = () => calibrate('s');
+$('#calB').onclick = () => calibrate('b');
+
+/* gesture detection */
+const pctOf = (v, i) => { const { s, b } = cal[i]; return b === s ? 0 : (v - s) / (b - s); };
+let cand = 0, candSince = 0, lastFired = 0, busy = false;
+
+function handle(vals, now){
+  if (calib) calib.samples.push(vals.slice());
+  const flags = vals.map((v, i) => pctOf(v, i) > S.thr / 100);
+  vals.forEach((v, i) => {
+    const el = $('#fg' + i);
+    el.querySelector('.fill').style.width = clamp(pctOf(v, i), 0, 1) * 100 + '%';
+    el.querySelector('.fval').textContent = Math.round(v);
+    el.classList.toggle('bent', flags[i]);
+  });
+  const mask = flags.reduce((m, f, i) => m | (f ? 1 << i : 0), 0);
+  if (mask !== cand){ cand = mask; candSince = now; }
+  const held = now - candSince;
+
+  if (mask === 0){
+    if (held > 500) lastFired = 0;
+    if (held > 3500 && shown !== 'normal' && !emergency) showCat('normal');
+    $('#holdBar').style.width = '0';
+    return;
+  }
+  const c = CATS[BY_MASK[mask]];
+  if (mask !== lastFired){
+    $('#holdBar').style.width = clamp(held / S.hold, 0, 1) * 100 + '%';
+    $('#status').style.setProperty('--c', emergency ? CATS.emergency.color : c.color);
+    if (held >= S.hold){ lastFired = mask; $('#holdBar').style.width = '0'; fire(BY_MASK[mask]); }
+  } else $('#holdBar').style.width = '0';
+}
+
+async function tick(){
+  if (busy) return; busy = true;
+  try {
+    let vals;
+    if (S.mode === 'demo'){ vals = simValues(); setConn('demo'); }
+    else { vals = await fetchLive(); if (!vals){ setConn('off'); return; } setConn('live'); }
+    handle(vals, Date.now());
+  } finally { busy = false; }
+}
+
+document.addEventListener('pointerdown', () => autoSound(), { once:true });
+
+/* demo input */
+function paintSim(){ simF.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', simBent[i])); }
+simF.onclick = e => { const b = e.target.closest('button'); if (!b) return; autoSound(); simBent[+b.dataset.i] = !simBent[+b.dataset.i]; paintSim(); };
+presetsEl.onclick = e => {
+  const b = e.target.closest('button'); if (!b) return; autoSound();
+  const m = +b.dataset.p; F.forEach((_, i) => simBent[i] = !!(m & (1 << i))); paintSim();
+};
+document.addEventListener('keydown', e => {
+  if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) || S.mode !== 'demo') return;
+  if (e.key >= '1' && e.key <= '3'){ autoSound(); simBent[+e.key - 1] = !simBent[+e.key - 1]; paintSim(); }
+  if (e.key === '0'){ simBent.fill(false); paintSim(); }
+});
+
+/* mode, language, settings */
+function applyMode(){
+  document.body.classList.toggle('live', S.mode === 'live');
+  document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
+  $('#espShow').textContent = espUrl();
+  if (S.mode === 'demo') setConn('demo');
+}
+$('#modeSeg').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.mode = b.dataset.mode; saveS(); connState = ''; applyMode();
+  if (S.mode === 'live') setConn('off');
+};
+function paintLang(){ document.querySelectorAll('#langs button').forEach(b => b.classList.toggle('on', b.dataset.l === S.lang)); }
+function setLang(l, say){
+  S.lang = l; saveS(); paintLang();
+  showCat(emergency ? 'emergency' : shown); renderHistory(); renderLegend();
+  if (say) speak(CATS.normal.msg[S.lang]);
+}
+$('#langs').onclick = e => { const b = e.target.closest('button'); if (b) setLang(b.dataset.l, true); };
+
+const dlg = $('#settings');
+function syncSettings(){
+  $('#esp').value = S.esp; $('#lang').value = S.lang; $('#thr').value = S.thr; $('#hold').value = S.hold;
+  $('#thrV').textContent = S.thr; $('#holdV').textContent = S.hold;
+  $('#voice').checked = S.voice; $('#siren').checked = S.siren; $('#vibrate').checked = S.vibrate;
+}
+$('#openSettings').onclick = () => { syncSettings(); dlg.showModal(); };
+$('#closeSettings').onclick = () => dlg.close();
+$('#esp').onchange = e => { S.esp = e.target.value.trim() || '192.168.189.73'; saveS(); $('#espShow').textContent = espUrl(); connState = ''; toast('ESP32 address saved'); };
+$('#lang').onchange = e => setLang(e.target.value, true);
+$('#thr').oninput = e => { S.thr = +e.target.value; $('#thrV').textContent = S.thr; saveS(); placeTicks(); };
+$('#hold').oninput = e => { S.hold = +e.target.value; $('#holdV').textContent = S.hold; saveS(); };
+['voice', 'siren', 'vibrate'].forEach(k => $('#' + k).onchange = e => { S[k] = e.target.checked; saveS(); });
+$('#testSound').onclick = () => { soundOn = true; soundTouched = true; ensureCtx(); loadVoices(); paintSound(); chime(); setTimeout(siren, 500); setTimeout(() => speak(CATS.water.msg[S.lang]), 1600); };
+$('#resetCal').onclick = () => { cal = F.map(() => ({ s:800, b:2600 })); store.set('cal', cal); toast('Calibration reset to defaults'); };
+
+
+/* ===== DEMO VIDEO =====
+   Yethe tujha video taak:
+   - YouTube link:  'https://youtu.be/XXXXXXXXXXX'  kiva  'https://www.youtube.com/watch?v=XXXXXXXXXXX'
+   - Video file:    'demo.mp4'  (file index.html chya barobar GitHub madhe upload kar)
+   Rikama thevla tar placeholder disto. */
+const DEMO_VIDEO = '';
+
+function renderVideo(){
+  const box = $('#vid'), u = DEMO_VIDEO.trim();
+  const yt = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+  if (yt) box.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${yt[1]}" title="Project demo" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+  else if (u) box.innerHTML = `<video controls playsinline preload="metadata" src="${u.replace(/"/g,'')}"></video>`;
+  else box.innerHTML = '<div class="ph"><div><b>🎬</b>Project demo video yethe disel</div></div>';
+}
+renderVideo();
+
+applyMode(); paintLang(); renderLegend(); renderHistory(); placeTicks(); paintSim(); paintSound(); showCat('normal');
+if (S.mode === 'live') setConn('off');
+loadVoices(); if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = loadVoices;
+setInterval(tick, 200);
+setInterval(tickEmergency, 1000);
+})();
+</script>
+</body>
+</html>
