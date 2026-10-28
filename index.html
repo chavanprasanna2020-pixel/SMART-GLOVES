@@ -1,339 +1,367 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Glove Care - Live Dashboard</title>
-  <style>
-    :root {
-      --bg: #0b0f19;
-      --card-bg: #151d30;
-      --accent: #38bdf8;
-      --green: #22c55e;
-      --red: #ef4444;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-    }
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      padding: 20px;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 1050px;
-      margin: 0 auto 20px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid #1e293b;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .brand h1 { margin: 0; font-size: 20px; }
-    .brand p { margin: 0; font-size: 13px; color: var(--text-muted); }
-    .header-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #1e293b;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-    }
-    .dot {
-      width: 8px;
-      height: 8px;
-      background: var(--red);
-      border-radius: 50%;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 20px;
-      max-width: 1050px;
-      margin: 0 auto;
-    }
-    .card {
-      background: var(--card-bg);
-      border-radius: 14px;
-      padding: 20px;
-      border: 1px solid #1e293b;
-    }
-    .hero-card {
-      text-align: center;
-      border: 1px solid #0284c7;
-      background: linear-gradient(180deg, #151d30 0%, #0f172a 100%);
-    }
-    .hero-icon { font-size: 50px; margin-bottom: 8px; }
-    .hero-title { font-size: 26px; font-weight: bold; color: var(--accent); }
-    .hero-desc { color: var(--text-muted); font-size: 15px; margin-top: 5px; }
-    
-    .bar-container { margin: 15px 0; }
-    .bar-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
-    .progress { background: #0f172a; height: 10px; border-radius: 5px; overflow: hidden; }
-    .fill { height: 100%; background: var(--green); width: 0%; transition: width 0.3s; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1626">
+<title>Smart Glove Care</title>
+<style>
+:root{
+  --bg:#0a1626; --bg2:#0f2036; --card:#12263d; --card2:#183050; --line:rgba(255,255,255,.08);
+  --text:#eef4fb; --sub:#9db2cc; --accent:#2dd4bf; --c:#2dd4bf; --danger:#f43f5e;
+  --r:22px;
+  --font:"Segoe UI","Noto Sans","Noto Sans Devanagari","Nirmala UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg)}
+body{font-family:var(--font);color:var(--text);min-height:100vh;line-height:1.45;
+  background:radial-gradient(900px 500px at 15% -10%,rgba(45,212,191,.14),transparent 60%),
+             radial-gradient(800px 500px at 100% 0%,rgba(56,189,248,.10),transparent 60%),var(--bg);
+  padding:max(14px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom));}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+.app{max-width:1080px;margin:0 auto}
 
-    input, select {
-      width: 100%;
-      padding: 10px;
-      background: #0f172a;
-      border: 1px solid #334155;
-      color: #fff;
-      border-radius: 8px;
-      margin-top: 8px;
-      margin-bottom: 12px;
-      outline: none;
-      box-sizing: border-box;
-      font-size: 14px;
-    }
-    .btn-sound {
-      background: #0284c7;
-      color: #fff;
-      border: none;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-    ul { list-style: none; padding: 0; margin: 10px 0 0; max-height: 180px; overflow-y: auto; }
-    li {
-      background: #0f172a;
-      padding: 10px 12px;
-      border-radius: 6px;
-      margin-bottom: 6px;
-      font-size: 14px;
-      display: flex;
-      justify-content: space-between;
-      border-left: 4px solid var(--accent);
-    }
-    .video-wrapper {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-      overflow: hidden;
-      border-radius: 10px;
-      background: #000;
-      margin-top: 10px;
-    }
-    .video-wrapper iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: 0;
-    }
-  </style>
+/* header */
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;
+  background:linear-gradient(145deg,#14b8a6,#0ea5e9);box-shadow:0 8px 22px rgba(20,184,166,.35)}
+h1{font-size:20px;letter-spacing:.2px}
+.brand p{font-size:12.5px;color:var(--sub)}
+.hdr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;background:var(--card);
+  border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--sub)}
+.pill i{width:9px;height:9px;border-radius:50%;background:#64748b}
+.pill.live{color:#6ee7b7}.pill.live i{background:#34d399;box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:ping 1.8s infinite}
+.pill.off{color:#fca5a5}.pill.off i{background:#f87171}
+.pill.demo i{background:#fbbf24}
+@keyframes ping{70%{box-shadow:0 0 0 8px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.langs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px}
+.langs button{padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700;color:var(--sub)}
+.langs button.on{background:var(--accent);color:#04201c}
+.icon-btn{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--line);font-size:18px}
+
+.sound{width:100%;padding:12px 16px;border-radius:16px;font-weight:700;font-size:14.5px;margin-bottom:14px;
+  background:rgba(251,191,36,.12);border:1px dashed rgba(251,191,36,.5);color:#fcd34d}
+.sound.on{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.4);color:#6ee7b7}
+
+main{display:grid;gap:14px}
+@media(min-width:900px){main{grid-template-columns:1.1fr .9fr;align-items:start}}
+.col{display:grid;gap:14px}
+.card{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:1.1px;color:var(--sub);font-weight:700;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:8px 13px;border-radius:12px;background:var(--card2);border:1px solid var(--line);font-size:13px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--text)}
+.btn:active{transform:scale(.97)}
+.btn.danger{color:#fda4af}
+.hint{font-size:12.5px;color:var(--sub);margin-top:12px}
+
+/* status */
+.status{--c:#34d399;text-align:center;padding:30px 18px 22px;position:relative;overflow:hidden;
+  background:radial-gradient(420px 260px at 50% 0%,color-mix(in srgb,var(--c) 26%,transparent),transparent 70%),linear-gradient(180deg,var(--card),var(--bg2));
+  border-color:color-mix(in srgb,var(--c) 45%,transparent);transition:border-color .4s}
+.status .ico{width:104px;height:104px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font-size:54px;
+  background:color-mix(in srgb,var(--c) 20%,transparent);border:2px solid color-mix(in srgb,var(--c) 60%,transparent)}
+.status .tag{display:inline-block;font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;padding:5px 12px;border-radius:999px;
+  background:color-mix(in srgb,var(--c) 22%,transparent);color:var(--c);margin-bottom:10px}
+.status h3{font-size:clamp(22px,5.4vw,32px);line-height:1.25;font-weight:800;max-width:640px;margin:0 auto}
+.status p{color:var(--sub);margin-top:8px;font-size:14px}
+.hold{height:6px;border-radius:6px;background:rgba(255,255,255,.08);margin:18px auto 0;max-width:360px;overflow:hidden}
+.hold div{height:100%;width:0;background:var(--c);transition:width .15s linear}
+.ack{display:none;margin:18px auto 0;padding:14px 26px;border-radius:16px;background:#fff;color:#be123c;font-weight:800;font-size:16px}
+.status.is-emergency .ack{display:inline-block}
+.status.pulse .ico{animation:pop .7s ease}
+@keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+body.alarm .alarm-overlay{opacity:1}
+.alarm-overlay{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;z-index:5;
+  box-shadow:inset 0 0 0 6px var(--danger),inset 0 0 90px rgba(244,63,94,.55);animation:flash 1s infinite}
+@keyframes flash{50%{box-shadow:inset 0 0 0 6px #fb7185,inset 0 0 40px rgba(244,63,94,.2)}}
+.status.is-emergency{border-color:var(--danger)}
+
+/* fingers */
+.fingers{display:grid;gap:12px}
+.finger{display:grid;grid-template-columns:86px 1fr 54px;align-items:center;gap:12px}
+.fname{font-weight:700;font-size:14px}.fname small{display:block;color:var(--sub);font-weight:500;font-size:11.5px}
+.bar{position:relative;height:16px;border-radius:10px;background:rgba(255,255,255,.07);overflow:visible}
+.fill{height:100%;width:0;border-radius:10px;background:linear-gradient(90deg,#38bdf8,#2dd4bf);transition:width .12s}
+.finger.bent .fill{background:linear-gradient(90deg,#fbbf24,#fb923c)}
+.tick{position:absolute;top:-4px;bottom:-4px;width:3px;border-radius:2px;background:#fff;opacity:.85}
+.fval{font-size:13px;color:var(--sub);text-align:right;font-variant-numeric:tabular-nums}
+
+/* segmented */
+.seg{display:grid;grid-template-columns:1fr 1fr;background:rgba(255,255,255,.05);border-radius:14px;padding:4px;margin-bottom:6px}
+.seg button{padding:10px;border-radius:11px;font-weight:700;font-size:14px;color:var(--sub)}
+.seg button.on{background:var(--accent);color:#04201c}
+body:not(.live) .live-only{display:none}
+body.live .demo-only{display:none}
+.sim-f{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.presets{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.sim-f button,.presets button{padding:11px;border-radius:12px;background:var(--card2);border:1px solid var(--line);font-weight:600;font-size:13.5px}
+.sim-f button.on{background:#fbbf24;color:#2a1c00}
+
+/* legend */
+.legend{display:grid;gap:9px}
+.lg{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;
+  background:color-mix(in srgb,var(--c) 10%,transparent);border:1px solid color-mix(in srgb,var(--c) 28%,transparent)}
+.lg .e{font-size:26px;text-align:center}
+.lg .t b{display:block;font-size:14px;color:var(--c)}
+.lg .t span{font-size:12.5px;color:var(--sub)}
+.dots{display:flex;gap:5px}
+.dots i{width:12px;height:22px;border-radius:6px;background:rgba(255,255,255,.14)}
+.dots i.f{background:var(--c)}
+
+/* history */
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.chip{padding:5px 11px;border-radius:999px;background:var(--card2);font-size:12.5px;font-weight:700;color:var(--sub)}
+.hist{list-style:none;display:grid;gap:8px;max-height:360px;overflow:auto}
+.hi{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;
+  background:rgba(255,255,255,.04);border-left:4px solid var(--c)}
+.hi .m{font-size:13.5px;font-weight:600}.hi small{display:block;color:var(--sub);font-weight:500;font-size:11.5px;margin-top:2px}
+.hi time{font-size:11.5px;color:var(--sub);white-space:nowrap}
+.empty{color:var(--sub);text-align:center;padding:18px;font-size:14px}
+
+
+/* demo video */
+.vid{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#07111f;border:1px solid var(--line)}
+.vid iframe,.vid video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.vid .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--sub);font-size:14px;padding:16px}
+.vid .ph b{display:block;font-size:34px;margin-bottom:6px}
+
+/* settings */
+dialog{margin:auto;border:1px solid var(--line);border-radius:24px;background:var(--bg2);color:var(--text);width:min(440px,92vw);padding:22px}
+dialog::backdrop{background:rgba(2,8,20,.7);backdrop-filter:blur(3px)}
+dialog h2{font-size:18px;margin-bottom:14px}
+.field{margin-bottom:14px}.field label{display:block;font-size:13px;color:var(--sub);margin-bottom:6px}
+.field select,.field input[type=text]{width:100%;padding:11px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--text)}
+.field input[type=range]{width:100%;accent-color:var(--accent)}
+.sw{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-top:1px solid var(--line);font-size:14.5px}
+.sw input{width:20px;height:20px;accent-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,30px);background:#fff;color:#0a1626;padding:12px 18px;border-radius:14px;
+  font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:20;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:480px){.finger{grid-template-columns:72px 1fr 46px}}
+</style>
 </head>
 <body>
+<div class="alarm-overlay"></div>
 
-  <div class="header">
+<div class="app">
+  <header>
     <div class="brand">
-      <div style="font-size: 30px;">🧤</div>
-      <div>
-        <h1>Smart Glove Care</h1>
-        <p>Patient assistive alert system</p>
-      </div>
+      <div class="logo">🧤</div>
+      <div><h1>Smart Glove Care</h1><p>Patient assistive alert system</p></div>
     </div>
-    
-    <div class="header-controls">
-      <button class="btn-sound" id="soundBtn" onclick="toggleSound()">🔊 Voice: ON</button>
-      <div class="badge">
-        <span class="dot" id="connDot"></span>
-        <span id="connText">Disconnected</span>
+    <div class="hdr-r">
+      <div class="pill" id="pill"><i></i><span id="pillTxt">Connecting…</span></div>
+      <div class="langs" id="langs">
+        <button data-l="en">EN</button><button data-l="mr">मराठी</button><button data-l="hi">हिं</button>
       </div>
+      <button class="icon-btn" id="openSettings" title="Settings" aria-label="Settings">⚙️</button>
     </div>
+  </header>
+
+  <button class="sound" id="soundBtn">🔇 Tap to enable Voice &amp; Siren</button>
+
+  <main>
+    <div class="col">
+      <section class="card status" id="status">
+        <div class="ico" id="stIcon">😊</div>
+        <div class="tag" id="stTag">All good</div>
+        <h3 id="stTitle">All is well. Patient is resting comfortably.</h3>
+        <p id="stSub">All fingers straight. Monitoring…</p>
+        <div class="hold"><div id="holdBar"></div></div>
+        <button class="ack" id="ackBtn">✅ I'm coming — Acknowledge</button>
+      </section>
+
+      <section class="card">
+        <h2><span>Live flex sensors</span>
+          <span class="row-btns live-only">
+            <button class="btn" id="calS">Calibrate straight</button>
+            <button class="btn" id="calB">Calibrate bent</button>
+          </span>
+        </h2>
+        <div class="fingers" id="fingers"></div>
+        <p class="hint">White line = trigger point. A gesture fires only after it is held steady, so accidental twitches are ignored.</p>
+      </section>
+
+      <section class="card">
+        <h2>Connection</h2>
+        <div class="seg" id="modeSeg">
+          <button data-mode="demo">🎮 Demo</button>
+          <button data-mode="live">📡 Live ESP32</button>
+        </div>
+        <div class="live-only">
+          <p class="hint" style="margin-top:10px">ESP32: <b id="espShow"></b><br>
+          Phone/laptop and ESP32 must be on the same Wi-Fi / hotspot. IP change karaycha asel tar ⚙️ Settings madhe kar.</p>
+        </div>
+        <div class="demo-only">
+          <h2 style="margin:12px 0 0">Simulate fingers</h2>
+          <div class="sim-f" id="simF"></div>
+          <div class="presets" id="presets"></div>
+          <p class="hint">Keyboard: press <b>1</b> <b>2</b> <b>3</b> to bend fingers, <b>0</b> to straighten all.</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card">
+        <h2>Project demo video</h2>
+        <div class="vid" id="vid"></div>
+      </section>
+
+      <section class="card">
+        <h2>Gesture guide · 7 messages</h2>
+        <div class="legend" id="legend"></div>
+      </section>
+
+      <section class="card">
+        <h2><span>Alert history</span>
+          <span class="row-btns">
+            <button class="btn" id="exportBtn">Export CSV</button>
+            <button class="btn danger" id="clearBtn">Clear</button>
+          </span>
+        </h2>
+        <div class="chips" id="stats"></div>
+        <ul class="hist" id="hist"></ul>
+      </section>
+    </div>
+  </main>
+</div>
+
+<dialog id="settings">
+  <h2>⚙️ Settings</h2>
+  <div class="field">
+    <label for="esp">ESP32 address (IP)</label>
+    <input type="text" id="esp" placeholder="192.168.189.73" autocomplete="off" inputmode="url">
   </div>
-
-  <div class="grid">
-    <!-- १. लाईव्ह मेसेज कार्ड (Hero Message Box) -->
-    <div class="card hero-card">
-      <div class="hero-icon" id="heroIcon">😊</div>
-      <div class="hero-title" id="statusTitle">All good</div>
-      <div class="hero-desc" id="statusDesc">All is well. Patient is resting comfortably.</div>
-    </div>
-
-    <!-- २. लाईव्ह सेन्सर बार्स -->
-    <div class="card">
-      <h3 style="margin-top:0;">Live Flex Sensors</h3>
-      <div class="bar-container">
-        <div class="bar-label"><span>Index Finger</span><span id="f1Val">0%</span></div>
-        <div class="progress"><div class="fill" id="f1Bar"></div></div>
-      </div>
-      <div class="bar-container">
-        <div class="bar-label"><span>Middle Finger</span><span id="f2Val">0%</span></div>
-        <div class="progress"><div class="fill" id="f2Bar"></div></div>
-      </div>
-      <div class="bar-container">
-        <div class="bar-label"><span>Thumb / Ring</span><span id="f3Val">0%</span></div>
-        <div class="progress"><div class="fill" id="f3Bar"></div></div>
-      </div>
-    </div>
-
-    <!-- ३. व्हिडिओ सेक्शन (Project Demo Video) -->
-    <div class="card">
-      <h3 style="margin-top:0;">Project Demo Video</h3>
-      <div class="video-wrapper">
-        <iframe 
-          src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
-          title="Smart Glove Demo" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-          allowfullscreen>
-        </iframe>
-      </div>
-    </div>
-
-    <!-- ४. कनेक्शन आणि व्हॉईस भाषा सेटिंग्ज -->
-    <div class="card">
-      <h3 style="margin-top:0;">Settings & Voice Language</h3>
-      
-      <label style="font-size: 13px; color: var(--text-muted);">आवाजाची भाषा निवडा (Voice Language):</label>
-      <select id="langSelect">
-        <option value="mr-IN">मराठी (Marathi Voice)</option>
-        <option value="en-US">English Voice</option>
-        <option value="hi-IN">हिन्दी (Hindi Voice)</option>
-      </select>
-
-      <label style="font-size: 13px; color: var(--text-muted);">ESP32 IP Address:</label>
-      <input type="text" id="ipInput" value="192.168.189.73" placeholder="192.168.189.73">
-      
-      <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
-        मोबाईल/लॅपटॉप आणि ESP32 एकाच Wi-Fi वर जोडलेले असावेत.
-      </p>
-    </div>
-
-    <!-- ५. अलर्ट हिस्ट्री -->
-    <div class="card">
-      <h3 style="margin-top:0;">Alert History</h3>
-      <ul id="historyList">
-        <li><span>System Ready</span><span style="color:var(--text-muted);">Just now</span></li>
-      </ul>
-    </div>
+  <div class="field">
+    <label for="lang">Alert language (text + voice)</label>
+    <select id="lang">
+      <option value="en">English</option>
+      <option value="mr">मराठी</option>
+      <option value="hi">हिन्दी</option>
+    </select>
   </div>
+  <div class="field">
+    <label for="thr">Bend sensitivity: <b id="thrV"></b>% (lower = bends easier)</label>
+    <input type="range" id="thr" min="20" max="80" step="5">
+  </div>
+  <div class="field">
+    <label for="hold">Hold time before alert: <b id="holdV"></b> ms</label>
+    <input type="range" id="hold" min="300" max="1500" step="100">
+  </div>
+  <div class="row-btns" style="margin-bottom:10px"><button class="btn" id="testSound">🔊 Test sound &amp; voice</button></div>
+  <label class="sw">Voice announcements <input type="checkbox" id="voice"></label>
+  <label class="sw">Emergency siren <input type="checkbox" id="siren"></label>
+  <label class="sw">Vibration (mobile) <input type="checkbox" id="vibrate"></label>
+  <div class="row-btns" style="margin-top:16px;justify-content:flex-end">
+    <button class="btn" id="resetCal">Reset calibration</button>
+    <button class="btn" id="closeSettings">Done</button>
+  </div>
+</dialog>
 
-  <script>
-    let lastAlert = "";
-    let soundEnabled = true;
+<div class="toast" id="toast"></div>
 
-    // भाषेनुसार उच्चारणासाठी शब्दकोश
-    const voiceMessages = {
-      "mr-IN": {
-        "Need Water": "पाणी हवे आहे",
-        "Need Food": "जेवण हवे आहे",
-        "Emergency": "तातडीची मदत हवी आहे",
-        "Washroom": "वॉशरुमला जायचे आहे",
-        "Medicine": "औषध हवे आहे"
-      },
-      "hi-IN": {
-        "Need Water": "पानी चाहिए",
-        "Need Food": "खाना चाहिए",
-        "Emergency": "मदद चाहिए",
-        "Washroom": "वॉशरूम जाना है",
-        "Medicine": "दवाई चाहिए"
-      },
-      "en-US": {
-        "Need Water": "Need Water",
-        "Need Food": "Need Food",
-        "Emergency": "Emergency alert! Need assistance",
-        "Washroom": "Need to go to washroom",
-        "Medicine": "Need medicine"
-      }
-    };
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
 
-    function toggleSound() {
-      soundEnabled = !soundEnabled;
-      const btn = document.getElementById("soundBtn");
-      if (soundEnabled) {
-        btn.innerText = "🔊 Voice: ON";
-        btn.style.background = "#0284c7";
-      } else {
-        btn.innerText = "🔇 Voice: OFF";
-        btn.style.background = "#475569";
-        window.speechSynthesis.cancel();
-      }
-    }
+const store = {
+  get(k, d){ try { const v = localStorage.getItem('sg_' + k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem('sg_' + k, JSON.stringify(v)); } catch(e){} }
+};
 
-    // आवाज बोलण्याचे फंक्शन
-    function playVoiceAlert(status) {
-      if (!soundEnabled || !('speechSynthesis' in window)) return;
+const F = [
+  { n:'Finger 1', pin:'GPIO 34' },
+  { n:'Finger 2', pin:'GPIO 35' },
+  { n:'Finger 3', pin:'GPIO 32' }
+];
 
-      window.speechSynthesis.cancel();
-      const lang = document.getElementById("langSelect").value;
-      const phrase = (voiceMessages[lang] && voiceMessages[lang][status]) ? voiceMessages[lang][status] : status;
+/* Gesture -> message. pattern = bitmask: Finger1=1, Finger2=2, Finger3=4 */
+const CATS = {
+  normal:   { icon:'😊', color:'#34d399', name:'All good', pattern:0,
+    msg:{ en:'All is well. Patient is resting comfortably.', mr:'सर्व ठीक आहे. रुग्ण आरामात विश्रांती घेत आहे.', hi:'सब ठीक है। मरीज़ आराम से है।' } },
+  water:    { icon:'💧', color:'#38bdf8', name:'Water', pattern:1,
+    msg:{ en:'I am thirsty. Please bring me some water.', mr:'मला तहान लागली आहे. कृपया पाणी आणा.', hi:'मुझे प्यास लगी है। कृपया पानी लाइए।' } },
+  medicine: { icon:'💊', color:'#a78bfa', name:'Medicine', pattern:2,
+    msg:{ en:'It is time for my medicine. Please help me take it.', mr:'माझ्या औषधाची वेळ झाली आहे. कृपया मला औषध द्या.', hi:'मेरी दवा का समय हो गया है। कृपया दवा दीजिए।' } },
+  food:     { icon:'🍲', color:'#4ade80', name:'Food', pattern:4,
+    msg:{ en:'I feel hungry. May I please have something to eat?', mr:'मला भूक लागली आहे. कृपया खायला द्या.', hi:'मुझे भूख लगी है। कृपया कुछ खाने को दीजिए।' } },
+  help:     { icon:'🤝', color:'#fbbf24', name:'Need help', pattern:3,
+    msg:{ en:'Please come to me. I need your help.', mr:'कृपया माझ्याजवळ या. मला तुमची मदत हवी आहे.', hi:'कृपया मेरे पास आइए। मुझे आपकी मदद चाहिए।' } },
+  washroom: { icon:'🚻', color:'#2dd4bf', name:'Washroom', pattern:5,
+    msg:{ en:'I need to use the washroom. Please help me.', mr:'मला स्वच्छतागृहात जायचे आहे. कृपया मदत करा.', hi:'मुझे शौचालय जाना है। कृपया मदद कीजिए।' } },
+  pain:     { icon:'🩹', color:'#fb923c', name:'Pain', pattern:6,
+    msg:{ en:'I am in pain. Please come and check on me.', mr:'मला वेदना होत आहेत. कृपया येऊन पाहा.', hi:'मुझे दर्द हो रहा है। कृपया आकर देखिए।' } },
+  emergency:{ icon:'🚨', color:'#f43f5e', name:'Emergency', pattern:7,
+    msg:{ en:'EMERGENCY! Please come immediately!', mr:'आणीबाणी! कृपया लगेच या!', hi:'आपातकाल! कृपया तुरंत आइए!' } }
+};
+const BY_MASK = {};
+Object.entries(CATS).forEach(([k, c]) => { if (c.pattern) BY_MASK[c.pattern] = k; });
+const VOICE_LANG = { en:'en-IN', mr:'mr-IN', hi:'hi-IN' };
 
-      const utterance = new SpeechSynthesisUtterance(phrase);
-      utterance.lang = lang;
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
-      window.speechSynthesis.speak(utterance);
-    }
+const S = Object.assign({ mode:'live', lang:'en', hold:600, thr:50, voice:true, siren:true, vibrate:true, esp:'192.168.189.73' }, store.get('settings', {}));
 
-    // ESP32 कडून डेटा खेचणे
-    async function fetchData() {
-      const ip = document.getElementById("ipInput").value.trim();
-      const dot = document.getElementById("connDot");
-      const text = document.getElementById("connText");
+if (S.esp === '192.168.9.73') S.esp = '192.168.189.73';
+let cal = store.get('cal', null);
+if (!Array.isArray(cal) || cal.length !== 3) cal = F.map(() => ({ s:800, b:2600 }));
+let history = store.get('history', []);
 
-      if (!ip) return;
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const saveS = () => store.set('settings', S);
+const espUrl = () => {
+  let u = String(S.esp || '').trim().replace(/\/+$/, '');
+  if (!u) u = '192.168.189.73';
+  if (!/^https?:\/\//i.test(u)) u = 'http://' + u;
+  if (!/\/status$/i.test(u)) u += '/status';
+  return u;
+};
+let toastT;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2800);
+}
+const patternText = mask => F.map((f, i) => (mask & (1 << i)) ? f.n : null).filter(Boolean).join(' + ');
 
-      try {
-        const res = await fetch(`http://${ip}/data`, { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          
-          dot.style.background = "var(--green)";
-          text.innerText = "Connected";
+/* finger gauges */
+const fingersEl = $('#fingers');
+F.forEach((f, i) => {
+  fingersEl.insertAdjacentHTML('beforeend',
+    `<div class="finger" id="fg${i}"><div class="fname">${f.n}<small>${f.pin}</small></div>
+     <div class="bar"><div class="fill"></div><div class="tick"></div></div><div class="fval">–</div></div>`);
+});
+const placeTicks = () => document.querySelectorAll('.tick').forEach(t => t.style.left = S.thr + '%');
 
-          // मेसेज अपडेट करणे
-          document.getElementById("heroIcon").innerText = data.icon;
-          document.getElementById("statusTitle").innerText = data.status;
-          document.getElementById("statusDesc").innerText = data.detail;
+/* demo controls */
+const simF = $('#simF');
+F.forEach((f, i) => simF.insertAdjacentHTML('beforeend', `<button data-i="${i}">☝️ ${i + 1}</button>`));
+const presetsEl = $('#presets');
+Object.entries(CATS).forEach(([k, c]) => {
+  if (k === 'normal') return;
+  presetsEl.insertAdjacentHTML('beforeend', `<button data-p="${c.pattern}">${c.icon} ${c.name}</button>`);
+});
+presetsEl.insertAdjacentHTML('beforeend', `<button data-p="0" style="grid-column:span 2">✋ Straighten all (reset)</button>`);
 
-          // बोटांचे बार्स अपडेट करणे
-          document.getElementById("f1Bar").style.width = data.f1 + "%";
-          document.getElementById("f1Val").innerText = data.f1 + "%";
-          document.getElementById("f2Bar").style.width = data.f2 + "%";
-          document.getElementById("f2Val").innerText = data.f2 + "%";
-          document.getElementById("f3Bar").style.width = data.f3 + "%";
-          document.getElementById("f3Val").innerText = data.f3 + "%";
+function renderLegend(){
+  $('#legend').innerHTML = Object.entries(CATS).filter(([k]) => k !== 'normal').map(([k, c]) => `
+    <div class="lg" style="--c:${c.color}"><span class="e">${c.icon}</span>
+      <span class="t"><b>${c.name}</b><span>${c.msg[S.lang]}</span></span>
+      <span class="dots">${F.map((_, i) => `<i class="${c.pattern & (1 << i) ? 'f' : ''}"></i>`).join('')}</span></div>`).join('');
+}
 
-          // नवीन अलर्ट आल्यावर आवाज देणे व हिस्ट्रीमध्ये नोंद करणे
-          if (data.status !== "All good" && data.status !== lastAlert) {
-            lastAlert = data.status;
-            playVoiceAlert(data.status);
-
-            const li = document.createElement("li");
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            li.innerHTML = `<span>${data.icon} <b>${data.status}</b></span><span style="color:#94a3b8;">${time}</span>`;
-            document.getElementById("historyList").prepend(li);
-          } else if (data.status === "All good") {
-            lastAlert = "All good";
-          }
-        }
-      } catch (e) {
-        dot.style.background = "var(--red)";
-        text.innerText = "Disconnected";
-      }
-    }
-
-    // दर १.५ सेकंदांनी ऑटो-रिफ्रेश
-    setInterval(fetchData, 1500);
-  </script>
-</body>
-</html>
+/* sound */
+let ctx = null, soundOn = false, soundTouched = false;
+function ensureCtx(){
+  const A = window.AudioContext || window.webkitAudioContext;
+  if (!ctx && A) ctx = new A();
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+}
+function tone(freq, t0, dur, type = 'sine', vol = .2){
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .02);
+  g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+  o.connect(g); g.connect(ctx.destination); o.start(t0); o.s
